@@ -1,10 +1,9 @@
 import AdminGuard from '@/components/AdminGuard';
-import { getDb } from '@/lib/db';
+import { queryOne, queryAll } from '@/lib/db';
 import { formatPrice, formatDateTime } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-interface RevenueRow { total: number }
 interface DailyRow { date: string; revenue: number }
 interface TopProductRow { name: string; revenue: number; sales: number }
 interface OrderRow {
@@ -15,47 +14,44 @@ interface OrderRow {
   created_at: string;
   product_name: string | null;
 }
-interface CountRow { count: number }
 
 export default async function AdminDashboardPage() {
-  const db = getDb();
-
-  const todayRevenue = (db.prepare(`
+  const todayRevenue = (await queryOne<{ total: number }>(`
     SELECT COALESCE(SUM(amount_cents), 0) as total FROM orders WHERE status = 'completed' AND date(created_at) = date('now')
-  `).get() as RevenueRow).total;
+  `))?.total ?? 0;
 
-  const weekRevenue = (db.prepare(`
+  const weekRevenue = (await queryOne<{ total: number }>(`
     SELECT COALESCE(SUM(amount_cents), 0) as total FROM orders WHERE status = 'completed' AND created_at >= datetime('now', '-7 days')
-  `).get() as RevenueRow).total;
+  `))?.total ?? 0;
 
-  const monthRevenue = (db.prepare(`
+  const monthRevenue = (await queryOne<{ total: number }>(`
     SELECT COALESCE(SUM(amount_cents), 0) as total FROM orders WHERE status = 'completed' AND created_at >= datetime('now', '-30 days')
-  `).get() as RevenueRow).total;
+  `))?.total ?? 0;
 
-  const allTimeRevenue = (db.prepare(`
+  const allTimeRevenue = (await queryOne<{ total: number }>(`
     SELECT COALESCE(SUM(amount_cents), 0) as total FROM orders WHERE status = 'completed'
-  `).get() as RevenueRow).total;
+  `))?.total ?? 0;
 
-  const dailyRevenue = db.prepare(`
+  const dailyRevenue = await queryAll<DailyRow>(`
     SELECT date(created_at) as date, COALESCE(SUM(amount_cents), 0) as revenue
     FROM orders WHERE status = 'completed' AND created_at >= datetime('now', '-30 days')
     GROUP BY date(created_at) ORDER BY date ASC
-  `).all() as DailyRow[];
+  `);
 
-  const topProducts = db.prepare(`
+  const topProducts = await queryAll<TopProductRow>(`
     SELECT p.name, COALESCE(SUM(o.amount_cents), 0) as revenue, COUNT(o.id) as sales
     FROM products p LEFT JOIN orders o ON o.product_id = p.id AND o.status = 'completed'
     GROUP BY p.id ORDER BY revenue DESC LIMIT 5
-  `).all() as TopProductRow[];
+  `);
 
-  const recentOrders = db.prepare(`
+  const recentOrders = await queryAll<OrderRow>(`
     SELECT o.id, o.customer_email, o.amount_cents, o.status, o.created_at, p.name as product_name
     FROM orders o LEFT JOIN products p ON p.id = o.product_id
     ORDER BY o.created_at DESC LIMIT 10
-  `).all() as OrderRow[];
+  `);
 
-  const totalCustomers = (db.prepare('SELECT COUNT(*) as count FROM customers').get() as CountRow).count;
-  const totalSubscribers = (db.prepare('SELECT COUNT(*) as count FROM email_subscribers WHERE unsubscribed_at IS NULL').get() as CountRow).count;
+  const totalCustomers = (await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM customers'))?.count ?? 0;
+  const totalSubscribers = (await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM email_subscribers WHERE unsubscribed_at IS NULL'))?.count ?? 0;
 
   // Build SVG chart
   const maxRevenue = Math.max(...dailyRevenue.map(d => d.revenue), 100);

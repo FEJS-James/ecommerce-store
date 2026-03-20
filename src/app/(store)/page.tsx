@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getDb } from '@/lib/db';
+import { queryAll } from '@/lib/db';
 import { CATEGORIES } from '@/lib/utils';
 import ProductCard from '@/components/ProductCard';
 import EmailSignup from '@/components/EmailSignup';
@@ -7,15 +7,14 @@ import type { Product } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default function HomePage() {
-  const db = getDb();
-  const featuredProducts = db.prepare(
+export default async function HomePage() {
+  const featuredProducts = await queryAll<Product>(
     "SELECT * FROM products WHERE featured = 1 AND status = 'active' LIMIT 4"
-  ).all() as Product[];
+  );
 
-  const allProducts = db.prepare(
+  const allProducts = await queryAll<Product>(
     "SELECT * FROM products WHERE status = 'active' ORDER BY created_at DESC LIMIT 8"
-  ).all() as Product[];
+  );
 
   return (
     <>

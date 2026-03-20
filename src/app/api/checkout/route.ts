@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { queryOne } from '@/lib/db';
 import { getStripe, isStripeConfigured } from '@/lib/stripe';
 import type { Product } from '@/lib/types';
 
@@ -11,8 +11,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
     }
 
-    const db = getDb();
-    const product = db.prepare("SELECT * FROM products WHERE id = ? AND status = 'active'").get(productId) as Product | undefined;
+    const product = await queryOne<Product>(
+      "SELECT * FROM products WHERE id = ? AND status = 'active'",
+      [productId]
+    );
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });

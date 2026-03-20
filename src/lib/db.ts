@@ -1,100 +1,137 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import { createClient, type Client, type InArgs } from '@libsql/client';
 
-const DB_PATH = path.join(process.cwd(), 'data', 'store.db');
+let client: Client | null = null;
 
-let db: Database.Database | null = null;
+export function getClient(): Client {
+  if (client) return client;
 
-export function getDb(): Database.Database {
-  if (db) return db;
+  client = createClient({
+    url: process.env.TURSO_ECOMMERCE_DATABASE_URL || 'file:data/store.db',
+    authToken: process.env.TURSO_ECOMMERCE_AUTH_TOKEN,
+  });
 
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  return client;
+}
+
+export async function initializeDb(): Promise<void> {
+  const db = getClient();
+
+  await db.batch([
+    {
+      sql: `CREATE TABLE IF NOT EXISTS products (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        description TEXT NOT NULL,
+        short_description TEXT,
+        price_cents INTEGER NOT NULL,
+        compare_price_cents INTEGER,
+        category TEXT NOT NULL,
+        tags TEXT DEFAULT '[]',
+        file_url TEXT,
+        file_name TEXT,
+        file_size_bytes INTEGER DEFAULT 0,
+        preview_images TEXT DEFAULT '[]',
+        thumbnail_url TEXT,
+        stripe_price_id TEXT,
+        status TEXT DEFAULT 'active',
+        featured INTEGER DEFAULT 0,
+        download_count INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )`,
+      args: [],
+    },
+    {
+      sql: `CREATE TABLE IF NOT EXISTS orders (
+        id TEXT PRIMARY KEY,
+        stripe_session_id TEXT UNIQUE,
+        stripe_payment_intent TEXT,
+        customer_email TEXT NOT NULL,
+        customer_name TEXT,
+        product_id TEXT REFERENCES products(id),
+        amount_cents INTEGER NOT NULL,
+        currency TEXT DEFAULT 'usd',
+        status TEXT DEFAULT 'completed',
+        download_token TEXT UNIQUE,
+        download_count INTEGER DEFAULT 0,
+        max_downloads INTEGER DEFAULT 3,
+        token_expires_at TEXT,
+        downloaded_at TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
+      args: [],
+    },
+    {
+      sql: `CREATE TABLE IF NOT EXISTS customers (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT,
+        total_spent_cents INTEGER DEFAULT 0,
+        order_count INTEGER DEFAULT 0,
+        first_purchase_at TEXT,
+        last_purchase_at TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
+      args: [],
+    },
+    {
+      sql: `CREATE TABLE IF NOT EXISTS email_subscribers (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT,
+        source TEXT DEFAULT 'website',
+        lead_magnet TEXT,
+        subscribed_at TEXT DEFAULT (datetime('now')),
+        unsubscribed_at TEXT
+      )`,
+      args: [],
+    },
+  ], 'write');
+
+  // Check if products table is empty; if so, seed it
+  const result = await db.execute({ sql: 'SELECT COUNT(*) as count FROM products', args: [] });
+  const count = (result.rows[0] as unknown as { count: number }).count;
+  if (count === 0) {
+    await seedProducts();
   }
+}
 
-  db = new Database(DB_PATH);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+// Ensure schema is initialized (called lazily)
+let initPromise: Promise<void> | null = null;
 
-  initializeSchema(db);
+export async function ensureDb(): Promise<Client> {
+  const db = getClient();
+  if (!initPromise) {
+    initPromise = initializeDb();
+  }
+  await initPromise;
   return db;
 }
 
-function initializeSchema(db: Database.Database) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS products (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      slug TEXT UNIQUE NOT NULL,
-      description TEXT NOT NULL,
-      short_description TEXT,
-      price_cents INTEGER NOT NULL,
-      compare_price_cents INTEGER,
-      category TEXT NOT NULL,
-      tags TEXT DEFAULT '[]',
-      file_url TEXT,
-      file_name TEXT,
-      file_size_bytes INTEGER DEFAULT 0,
-      preview_images TEXT DEFAULT '[]',
-      thumbnail_url TEXT,
-      stripe_price_id TEXT,
-      status TEXT DEFAULT 'active',
-      featured INTEGER DEFAULT 0,
-      download_count INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS orders (
-      id TEXT PRIMARY KEY,
-      stripe_session_id TEXT UNIQUE,
-      stripe_payment_intent TEXT,
-      customer_email TEXT NOT NULL,
-      customer_name TEXT,
-      product_id TEXT REFERENCES products(id),
-      amount_cents INTEGER NOT NULL,
-      currency TEXT DEFAULT 'usd',
-      status TEXT DEFAULT 'completed',
-      download_token TEXT UNIQUE,
-      download_count INTEGER DEFAULT 0,
-      max_downloads INTEGER DEFAULT 3,
-      token_expires_at TEXT,
-      downloaded_at TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS customers (
-      id TEXT PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
-      name TEXT,
-      total_spent_cents INTEGER DEFAULT 0,
-      order_count INTEGER DEFAULT 0,
-      first_purchase_at TEXT,
-      last_purchase_at TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS email_subscribers (
-      id TEXT PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
-      name TEXT,
-      source TEXT DEFAULT 'website',
-      lead_magnet TEXT,
-      subscribed_at TEXT DEFAULT (datetime('now')),
-      unsubscribed_at TEXT
-    );
-  `);
-
-  // Check if products table is empty; if so, seed it
-  const count = db.prepare('SELECT COUNT(*) as count FROM products').get() as { count: number };
-  if (count.count === 0) {
-    seedProducts(db);
-  }
+// Helper: execute a query and return all rows
+export async function queryAll<T = Record<string, unknown>>(sql: string, args: InArgs = []): Promise<T[]> {
+  const db = await ensureDb();
+  const result = await db.execute({ sql, args });
+  return result.rows as unknown as T[];
 }
 
-function seedProducts(db: Database.Database) {
+// Helper: execute a query and return the first row
+export async function queryOne<T = Record<string, unknown>>(sql: string, args: InArgs = []): Promise<T | undefined> {
+  const db = await ensureDb();
+  const result = await db.execute({ sql, args });
+  return result.rows[0] as unknown as T | undefined;
+}
+
+// Helper: execute a write query (INSERT, UPDATE, DELETE)
+export async function execute(sql: string, args: InArgs = []) {
+  const db = await ensureDb();
+  return db.execute({ sql, args });
+}
+
+async function seedProducts() {
+  const db = getClient();
+
   const products = [
     {
       id: 'prod_001',
@@ -565,16 +602,24 @@ Create stunning AI art. Every time.`,
     },
   ];
 
-  const stmt = db.prepare(`
-    INSERT INTO products (id, name, slug, description, short_description, price_cents, compare_price_cents, category, tags, thumbnail_url, featured, status)
-    VALUES (@id, @name, @slug, @description, @short_description, @price_cents, @compare_price_cents, @category, @tags, @thumbnail_url, @featured, @status)
-  `);
+  const statements = products.map((p) => ({
+    sql: `INSERT INTO products (id, name, slug, description, short_description, price_cents, compare_price_cents, category, tags, thumbnail_url, featured, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      p.id,
+      p.name,
+      p.slug,
+      p.description,
+      p.short_description,
+      p.price_cents,
+      p.compare_price_cents,
+      p.category,
+      p.tags,
+      p.thumbnail_url,
+      p.featured,
+      p.status,
+    ],
+  }));
 
-  const insertAll = db.transaction(() => {
-    for (const product of products) {
-      stmt.run(product);
-    }
-  });
-
-  insertAll();
+  await db.batch(statements, 'write');
 }

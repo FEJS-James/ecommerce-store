@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getDb } from '@/lib/db';
+import { queryOne, queryAll } from '@/lib/db';
 import { formatPrice, CATEGORIES, CATEGORY_FAQS } from '@/lib/utils';
 import ProductCard from '@/components/ProductCard';
 import BuyButton from '@/components/BuyButton';
@@ -13,17 +13,20 @@ interface PageProps {
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const db = getDb();
 
-  const product = db.prepare("SELECT * FROM products WHERE slug = ? AND status = 'active'").get(slug) as Product | undefined;
+  const product = await queryOne<Product>(
+    "SELECT * FROM products WHERE slug = ? AND status = 'active'",
+    [slug]
+  );
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = db.prepare(
-    "SELECT * FROM products WHERE category = ? AND id != ? AND status = 'active' LIMIT 4"
-  ).all(product.category, product.id) as Product[];
+  const relatedProducts = await queryAll<Product>(
+    "SELECT * FROM products WHERE category = ? AND id != ? AND status = 'active' LIMIT 4",
+    [product.category, product.id]
+  );
 
   const category = CATEGORIES[product.category];
   const faqs = CATEGORY_FAQS[product.category] || [];

@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { queryOne, execute } from '@/lib/db';
+import { isAuthenticated } from '@/lib/auth';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
-    const db = getDb();
 
-    const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    const existing = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
     if (!existing) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
@@ -39,9 +43,9 @@ export async function PATCH(
     fields.push("updated_at = datetime('now')");
     values.push(id);
 
-    db.prepare(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+    await execute(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`, values);
 
-    const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    const updated = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
     return NextResponse.json({ product: updated });
   } catch (error) {
     console.error('Update product error:', error);
@@ -53,16 +57,19 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
-    const db = getDb();
 
-    const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    const existing = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
     if (!existing) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    db.prepare('DELETE FROM products WHERE id = ?').run(id);
+    await execute('DELETE FROM products WHERE id = ?', [id]);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Delete product error:', error);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { queryOne, execute } from '@/lib/db';
 
 interface OrderRow {
   id: string;
@@ -21,11 +21,11 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
-    const db = getDb();
 
-    const order = db.prepare(
-      'SELECT id, download_count, max_downloads, token_expires_at, product_id FROM orders WHERE download_token = ?'
-    ).get(token) as OrderRow | undefined;
+    const order = await queryOne<OrderRow>(
+      'SELECT id, download_count, max_downloads, token_expires_at, product_id FROM orders WHERE download_token = ?',
+      [token]
+    );
 
     if (!order) {
       return NextResponse.json({ error: 'Invalid download token' }, { status: 404 });
@@ -42,7 +42,10 @@ export async function GET(
     }
 
     // Get product file URL
-    const product = db.prepare('SELECT file_url, file_name, name FROM products WHERE id = ?').get(order.product_id) as ProductRow | undefined;
+    const product = await queryOne<ProductRow>(
+      'SELECT file_url, file_name, name FROM products WHERE id = ?',
+      [order.product_id]
+    );
 
     if (!product || !product.file_url) {
       return NextResponse.json(
@@ -55,9 +58,10 @@ export async function GET(
     }
 
     // Increment download count
-    db.prepare(
-      "UPDATE orders SET download_count = download_count + 1, downloaded_at = datetime('now') WHERE id = ?"
-    ).run(order.id);
+    await execute(
+      "UPDATE orders SET download_count = download_count + 1, downloaded_at = datetime('now') WHERE id = ?",
+      [order.id]
+    );
 
     // Redirect to file URL
     return NextResponse.redirect(product.file_url);

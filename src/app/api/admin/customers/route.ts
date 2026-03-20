@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { queryAll } from '@/lib/db';
+import { isAuthenticated } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const db = getDb();
-    const customers = db.prepare('SELECT * FROM customers ORDER BY last_purchase_at DESC').all();
+    const customers = await queryAll('SELECT * FROM customers ORDER BY last_purchase_at DESC');
     return NextResponse.json({ customers });
   } catch (error) {
     console.error('Customers error:', error);

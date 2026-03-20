@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { queryAll } from '@/lib/db';
+import { isAuthenticated } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,13 +13,16 @@ interface Subscriber {
 }
 
 export async function GET(request: NextRequest) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const db = getDb();
     const format = request.nextUrl.searchParams.get('format');
 
-    const subscribers = db.prepare(
+    const subscribers = await queryAll<Subscriber>(
       'SELECT * FROM email_subscribers WHERE unsubscribed_at IS NULL ORDER BY subscribed_at DESC'
-    ).all() as Subscriber[];
+    );
 
     if (format === 'csv') {
       const headers = ['email', 'name', 'source', 'lead_magnet', 'subscribed_at'];
