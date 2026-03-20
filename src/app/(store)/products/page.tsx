@@ -16,7 +16,7 @@ function ProductsContent() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/admin/products?status=active`)
+    fetch(`/api/products`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(data.products || []);

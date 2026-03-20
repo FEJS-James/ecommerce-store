@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import { formatPrice, CATEGORIES, slugify } from '@/lib/utils';
 import type { Product } from '@/lib/types';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 export default function AdminProductsPage() {
+  const { authenticated, checking } = useAdminAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -36,6 +38,10 @@ export default function AdminProductsPage() {
     if (!confirm('Are you sure you want to delete this product?')) return;
     await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
     loadProducts();
+  }
+
+  if (checking || !authenticated) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-gray-500">Loading...</p></div>;
   }
 
   return (

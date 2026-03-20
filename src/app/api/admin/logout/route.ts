@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { clearSessionCookie } from '@/lib/auth';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   await clearSessionCookie();
-  return NextResponse.redirect(new URL('/admin/login', 'http://localhost:3000'), { status: 302 });
+  const url = new URL('/admin/login', request.url);
+  return NextResponse.redirect(url, { status: 302 });
 }

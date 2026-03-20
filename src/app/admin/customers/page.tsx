@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import { formatPrice, formatDate } from '@/lib/utils';
 import type { Customer } from '@/lib/types';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 export default function AdminCustomersPage() {
+  const { authenticated, checking } = useAdminAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,6 +20,10 @@ export default function AdminCustomersPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  if (checking || !authenticated) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-gray-500">Loading...</p></div>;
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-100">

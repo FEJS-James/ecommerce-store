@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import { formatDate } from '@/lib/utils';
 import type { EmailSubscriber } from '@/lib/types';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 export default function AdminSubscribersPage() {
+  const { authenticated, checking } = useAdminAuth();
   const [subscribers, setSubscribers] = useState<EmailSubscriber[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +23,10 @@ export default function AdminSubscribersPage() {
 
   function handleExportCSV() {
     window.open('/api/admin/subscribers?format=csv', '_blank');
+  }
+
+  if (checking || !authenticated) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-gray-500">Loading...</p></div>;
   }
 
   return (

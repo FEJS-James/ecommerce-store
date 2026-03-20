@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import { formatPrice, formatDateTime } from '@/lib/utils';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 interface OrderRow {
   id: string;
@@ -15,6 +16,7 @@ interface OrderRow {
 }
 
 export default function AdminOrdersPage() {
+  const { authenticated, checking } = useAdminAuth();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState('');
@@ -34,6 +36,10 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  if (checking || !authenticated) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-gray-500">Loading...</p></div>;
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-100">

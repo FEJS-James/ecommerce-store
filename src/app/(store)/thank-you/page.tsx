@@ -26,7 +26,7 @@ function ThankYouContent() {
       return;
     }
 
-    fetch(`/api/admin/orders?session_id=${sessionId}`)
+    fetch(`/api/orders/lookup?session_id=${sessionId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.order) {
