@@ -89,11 +89,15 @@ export async function initializeDb(): Promise<void> {
         id TEXT PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
         name TEXT,
+        password_hash TEXT,
+        password_reset_token TEXT,
+        password_reset_expires TEXT,
         total_spent_cents INTEGER DEFAULT 0,
         order_count INTEGER DEFAULT 0,
         first_purchase_at TEXT,
         last_purchase_at TEXT,
-        created_at TEXT DEFAULT (datetime('now'))
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
       )`,
       args: [],
     },
@@ -110,6 +114,35 @@ export async function initializeDb(): Promise<void> {
       args: [],
     },
   ], 'write');
+
+  // Migration: add customer_id to orders if not present
+  try {
+    await db.execute({ sql: `ALTER TABLE orders ADD COLUMN customer_id TEXT REFERENCES customers(id)`, args: [] });
+  } catch {
+    // Column already exists — ignore
+  }
+
+  // Migration: add password_hash to customers if not present (for existing DBs)
+  try {
+    await db.execute({ sql: `ALTER TABLE customers ADD COLUMN password_hash TEXT`, args: [] });
+  } catch {
+    // Column already exists — ignore
+  }
+  try {
+    await db.execute({ sql: `ALTER TABLE customers ADD COLUMN password_reset_token TEXT`, args: [] });
+  } catch {
+    // ignore
+  }
+  try {
+    await db.execute({ sql: `ALTER TABLE customers ADD COLUMN password_reset_expires TEXT`, args: [] });
+  } catch {
+    // ignore
+  }
+  try {
+    await db.execute({ sql: `ALTER TABLE customers ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))`, args: [] });
+  } catch {
+    // ignore
+  }
 
   // Check if products table is empty; if so, seed it
   const result = await db.execute({ sql: 'SELECT COUNT(*) as count FROM products', args: [] });

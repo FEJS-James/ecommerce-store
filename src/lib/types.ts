@@ -27,6 +27,7 @@ export interface Order {
   stripe_payment_intent: string | null;
   customer_email: string;
   customer_name: string | null;
+  customer_id: string | null;
   product_id: string;
   amount_cents: number;
   currency: string;
@@ -43,11 +44,15 @@ export interface Customer {
   id: string;
   email: string;
   name: string | null;
+  password_hash: string | null;
+  password_reset_token: string | null;
+  password_reset_expires: string | null;
   total_spent_cents: number;
   order_count: number;
   first_purchase_at: string | null;
   last_purchase_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 export interface EmailSubscriber {

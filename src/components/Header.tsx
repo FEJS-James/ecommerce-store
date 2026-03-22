@@ -23,6 +23,9 @@ export default function Header() {
             <Link href="/free" className="text-gray-300 hover:text-white transition-colors">
               Free Downloads
             </Link>
+            <Link href="/account" className="text-gray-300 hover:text-white transition-colors">
+              My Account
+            </Link>
             <Link
               href="/products"
               className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
@@ -66,6 +69,13 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Free Downloads
+              </Link>
+              <Link
+                href="/account"
+                className="text-gray-300 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                My Account
               </Link>
             </div>
           </div>
