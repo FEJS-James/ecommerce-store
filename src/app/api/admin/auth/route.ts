@@ -1,17 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validatePassword, generateSessionToken, setSessionCookie } from '@/lib/auth';
+import { authenticateAdmin, setSessionCookie } from '@/lib/auth';
+import { ensureDb } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json();
+    // Ensure DB tables exist (including admin_users)
+    await ensureDb();
 
-    if (!validatePassword(password)) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+    const { email, password, rememberMe } = await request.json();
+
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const token = generateSessionToken();
-    await setSessionCookie(token);
+    const ipAddress = request.headers.get('x-forwarded-for') ||
+                      request.headers.get('x-real-ip') ||
+                      'unknown';
 
+    const result = await authenticateAdmin(email, password, ipAddress, rememberMe);
+
+    if (!result.success) {
+      const status = result.retryAfter ? 429 : 401;
+      return NextResponse.json(
+        { error: result.error, ...(result.retryAfter ? { retryAfter: result.retryAfter } : {}) },
+        { status }
+      );
+    }
+
+    await setSessionCookie(result.token, rememberMe);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Auth error:', error);

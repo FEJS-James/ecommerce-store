@@ -9,7 +9,7 @@ export function useAdminAuth() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/dashboard')
+    fetch('/api/admin/me')
       .then((res) => {
         if (res.status === 401) {
           router.replace('/admin/login');

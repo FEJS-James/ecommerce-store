@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -18,14 +20,16 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password, rememberMe }),
       });
+
+      const data = await res.json();
 
       if (res.ok) {
         router.push('/admin');
         router.refresh();
       } else {
-        setError('Invalid password');
+        setError(data.error || 'Invalid credentials');
       }
     } catch {
       setError('Network error. Please try again.');
@@ -40,10 +44,26 @@ export default function AdminLoginPage() {
         <div className="text-center mb-8">
           <span className="text-4xl block mb-3">⚡</span>
           <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
-          <p className="text-gray-500 mt-2">Enter your password to continue</p>
+          <p className="text-gray-500 mt-2">Sign in to your admin account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@store.local"
+              required
+              autoFocus
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+            />
+          </div>
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -53,11 +73,23 @@ export default function AdminLoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter admin password"
+              placeholder="Enter your password"
               required
-              autoFocus
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
             />
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="rememberMe"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            />
+            <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-600">
+              Remember me for 30 days
+            </label>
           </div>
 
           {error && (

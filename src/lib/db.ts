@@ -18,6 +18,28 @@ export async function initializeDb(): Promise<void> {
 
   await db.batch([
     {
+      sql: `CREATE TABLE IF NOT EXISTS admin_users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        name TEXT NOT NULL DEFAULT 'Admin',
+        role TEXT NOT NULL DEFAULT 'admin',
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )`,
+      args: [],
+    },
+    {
+      sql: `CREATE TABLE IF NOT EXISTS login_attempts (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        ip_address TEXT NOT NULL DEFAULT '',
+        success INTEGER NOT NULL DEFAULT 0,
+        attempted_at TEXT DEFAULT (datetime('now'))
+      )`,
+      args: [],
+    },
+    {
       sql: `CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -95,6 +117,13 @@ export async function initializeDb(): Promise<void> {
   if (count === 0) {
     await seedProducts();
   }
+
+  // Seed default admin user if none exists
+  const adminCount = await db.execute({ sql: 'SELECT COUNT(*) as count FROM admin_users', args: [] });
+  const admins = (adminCount.rows[0] as unknown as { count: number }).count;
+  if (admins === 0) {
+    await seedAdminUser();
+  }
 }
 
 // Ensure schema is initialized (called lazily)
@@ -127,6 +156,23 @@ export async function queryOne<T = Record<string, unknown>>(sql: string, args: I
 export async function execute(sql: string, args: InArgs = []) {
   const db = await ensureDb();
   return db.execute({ sql, args });
+}
+
+async function seedAdminUser() {
+  // Dynamic import to avoid circular dependency at module level
+  const bcrypt = await import('bcryptjs');
+  const db = getClient();
+
+  const defaultEmail = process.env.ADMIN_EMAIL || 'admin@store.local';
+  const defaultPassword = process.env.ADMIN_PASSWORD || 'admin';
+  const passwordHash = await bcrypt.hash(defaultPassword, 10);
+  const id = crypto.randomUUID();
+
+  await db.execute({
+    sql: `INSERT INTO admin_users (id, email, password_hash, name, role)
+          VALUES (?, ?, ?, ?, ?)`,
+    args: [id, defaultEmail, passwordHash, 'Admin', 'admin'],
+  });
 }
 
 async function seedProducts() {

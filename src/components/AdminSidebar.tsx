@@ -9,6 +9,7 @@ const navItems = [
   { href: '/admin/orders', label: 'Orders', icon: '🛒' },
   { href: '/admin/customers', label: 'Customers', icon: '👥' },
   { href: '/admin/subscribers', label: 'Subscribers', icon: '📧' },
+  { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export default function AdminSidebar() {
