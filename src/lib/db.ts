@@ -165,6 +165,10 @@ async function seedAdminUser() {
 
   const defaultEmail = process.env.ADMIN_EMAIL || 'admin@store.local';
   const defaultPassword = process.env.ADMIN_PASSWORD || 'admin';
+
+  if (!process.env.ADMIN_PASSWORD) {
+    console.warn('⚠️  WARNING: Seeding admin with default password "admin". Set ADMIN_PASSWORD env var for production!');
+  }
   const passwordHash = await bcrypt.hash(defaultPassword, 10);
   const id = crypto.randomUUID();
 

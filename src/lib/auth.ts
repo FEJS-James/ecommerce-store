@@ -7,7 +7,16 @@ import { queryOne, queryAll, execute } from '@/lib/db';
 // Constants
 // ---------------------------------------------------------------------------
 const SESSION_COOKIE = 'admin_token';
-const JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD || 'default-jwt-secret-change-me';
+const _devFallbackSecret = 'dev-only-secret-' + crypto.randomUUID();
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  return secret || _devFallbackSecret;
+}
+
 const BCRYPT_ROUNDS = 10;
 
 const TOKEN_EXPIRY_DEFAULT = '24h';
@@ -53,14 +62,14 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 // JWT helpers
 // ---------------------------------------------------------------------------
 export function signToken(payload: Omit<JWTPayload, 'iat' | 'exp'>, rememberMe = false): string {
-  return jwt.sign(payload, JWT_SECRET, {
+  return jwt.sign(payload, getJwtSecret(), {
     expiresIn: rememberMe ? TOKEN_EXPIRY_REMEMBER : TOKEN_EXPIRY_DEFAULT,
   });
 }
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    return jwt.verify(token, getJwtSecret()) as JWTPayload;
   } catch {
     return null;
   }
@@ -142,7 +151,12 @@ export async function getRemainingLockoutSeconds(email: string): Promise<number>
     [email, cutoff]
   );
   if (!lastAttempt) return 0;
-  const lockoutEnd = new Date(lastAttempt.attempted_at + 'Z').getTime() + LOCKOUT_MINUTES * 60 * 1000;
+  const attemptTime = new Date(
+    lastAttempt.attempted_at.endsWith('Z')
+      ? lastAttempt.attempted_at
+      : lastAttempt.attempted_at + 'Z'
+  ).getTime();
+  const lockoutEnd = attemptTime + LOCKOUT_MINUTES * 60 * 1000;
   return Math.max(0, Math.ceil((lockoutEnd - Date.now()) / 1000));
 }
 
