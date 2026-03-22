@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { queryOne, execute } from '@/lib/db';
+import { isLockedOut, recordLoginAttempt, getRemainingLockoutSeconds } from '@/lib/auth';
 import type { Customer } from '@/lib/types';
 
 // ---------------------------------------------------------------------------
@@ -12,12 +13,15 @@ const CUSTOMER_COOKIE = 'customer_token';
 const _devFallbackSecret = 'customer-dev-secret-' + crypto.randomUUID();
 
 function getCustomerJwtSecret(): string {
-  // Use a different secret or prefix from admin
+  // Use dedicated customer secret if available
+  const customerSecret = process.env.CUSTOMER_JWT_SECRET;
+  if (customerSecret) return customerSecret;
+
+  // Fall back to prefixed JWT_SECRET to ensure admin and customer tokens are never interchangeable
   const secret = process.env.JWT_SECRET;
   if (!secret && process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET environment variable is required in production');
+    throw new Error('JWT_SECRET or CUSTOMER_JWT_SECRET environment variable is required in production');
   }
-  // Prefix to ensure admin and customer tokens are never interchangeable
   return 'customer:' + (secret || _devFallbackSecret);
 }
 
@@ -162,19 +166,47 @@ export async function registerCustomer(
 // ---------------------------------------------------------------------------
 export async function authenticateCustomer(
   email: string,
-  password: string
-): Promise<{ success: true; token: string } | { success: false; error: string }> {
+  password: string,
+  ipAddress: string = 'unknown'
+): Promise<{ success: true; token: string } | { success: false; error: string; retryAfter?: number }> {
   const normalizedEmail = email.toLowerCase().trim();
+
+  // Check lockout before attempting authentication
+  if (await isLockedOut(normalizedEmail)) {
+    const retryAfter = await getRemainingLockoutSeconds(normalizedEmail);
+    return {
+      success: false,
+      error: `Too many failed attempts. Try again in ${Math.ceil(retryAfter / 60)} minutes.`,
+      retryAfter,
+    };
+  }
+
   const customer = await getCustomerByEmail(normalizedEmail);
 
   if (!customer || !customer.password_hash) {
+    await recordLoginAttempt(normalizedEmail, ipAddress, false);
     return { success: false, error: 'Invalid email or password' };
   }
 
   const valid = await verifyPassword(password, customer.password_hash);
   if (!valid) {
+    await recordLoginAttempt(normalizedEmail, ipAddress, false);
+
+    // Check if now locked out after this failed attempt
+    if (await isLockedOut(normalizedEmail)) {
+      const retryAfter = await getRemainingLockoutSeconds(normalizedEmail);
+      return {
+        success: false,
+        error: `Too many failed attempts. Account locked for 15 minutes.`,
+        retryAfter,
+      };
+    }
+
     return { success: false, error: 'Invalid email or password' };
   }
+
+  // Success — record and clear failed attempts
+  await recordLoginAttempt(normalizedEmail, ipAddress, true);
 
   const token = signCustomerToken({ sub: customer.id, email: customer.email, name: customer.name });
   return { success: true, token };
