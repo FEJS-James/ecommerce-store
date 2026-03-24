@@ -158,14 +158,10 @@ export async function initializeDb(): Promise<void> {
     await seedProducts();
   }
 
-  // Seed admin user only when BOTH env vars are explicitly set (CI/production headless setup).
+  // Seed/upsert admin user when BOTH env vars are explicitly set (CI/production headless setup).
   // If neither is set, skip seeding so the interactive setup endpoint can handle first-admin creation.
   if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-    const adminCount = await db.execute({ sql: 'SELECT COUNT(*) as count FROM admin_users', args: [] });
-    const admins = Number((adminCount.rows[0] as unknown as { count: number }).count);
-    if (admins === 0) {
-      await seedAdminUser();
-    }
+    await seedAdminUser();
   }
 
   // One-time migration: seed Stripe IDs for existing products
@@ -205,23 +201,36 @@ export async function execute(sql: string, args: InArgs = []) {
 }
 
 async function seedAdminUser() {
-  // Only called when both ADMIN_EMAIL and ADMIN_PASSWORD env vars are set
+  // Only called when both ADMIN_EMAIL and ADMIN_PASSWORD env vars are set.
+  // Uses an UPSERT pattern: if an admin already exists, update their credentials;
+  // if no admin exists, create one. This ensures setting env vars on Vercel
+  // always works even if an admin already exists.
   const bcrypt = await import('bcryptjs');
   const db = getClient();
 
-  const email = process.env.ADMIN_EMAIL!;
+  const email = process.env.ADMIN_EMAIL!.trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD!;
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const id = crypto.randomUUID();
 
-  // Atomic insert: only succeeds if no admin exists yet
-  await db.execute({
-    sql: `INSERT INTO admin_users (id, email, password_hash, name, role)
-          SELECT ?, ?, ?, ?, ?
-          WHERE NOT EXISTS (SELECT 1 FROM admin_users)`,
-    args: [id, email, passwordHash, 'Admin', 'admin'],
-  });
+  // Check if any admin exists
+  const result = await db.execute({ sql: 'SELECT id FROM admin_users ORDER BY created_at ASC LIMIT 1', args: [] });
+
+  if (result.rows.length > 0) {
+    // Update the first admin's credentials
+    const existingId = (result.rows[0] as unknown as { id: string }).id;
+    await db.execute({
+      sql: `UPDATE admin_users SET email = ?, password_hash = ?, updated_at = datetime('now') WHERE id = ?`,
+      args: [email, passwordHash, existingId],
+    });
+  } else {
+    // No admin exists — insert a new one
+    const id = crypto.randomUUID();
+    await db.execute({
+      sql: `INSERT INTO admin_users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)`,
+      args: [id, email, passwordHash, 'Admin', 'admin'],
+    });
+  }
 }
 
 async function seedStripeIds() {
