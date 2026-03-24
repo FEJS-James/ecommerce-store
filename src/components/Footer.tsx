@@ -8,11 +8,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl text-white mb-4">
-              <span className="text-2xl">⚡</span>
-              <span>DigiStore</span>
+              <span className="text-2xl">🛡️</span>
+              <span>AI Armory</span>
             </Link>
             <p className="text-gray-400 max-w-md">
-              Premium digital products for creators, developers, and professionals. 
+              Your arsenal of AI-powered digital products for creators, developers, and professionals.
               Instant delivery. Lifetime access. No subscriptions.
             </p>
           </div>
@@ -38,7 +38,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm">&copy; {new Date().getFullYear()} DigiStore. All rights reserved.</p>
+          <p className="text-sm">&copy; {new Date().getFullYear()} AI Armory. All rights reserved.</p>
           <div className="flex items-center gap-4 text-sm">
             <span>Instant Delivery ⚡</span>
             <span>Lifetime Access 🔒</span>

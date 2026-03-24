@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryOne } from '@/lib/db';
 import { getStripe, isStripeConfigured } from '@/lib/stripe';
 import type { Product } from '@/lib/types';
+import type Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,24 +28,29 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe()!;
     const origin = request.headers.get('origin') || 'http://localhost:3000';
 
+    // Build line items — use existing Stripe Price if available, otherwise use price_data
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = product.stripe_price_id
+      ? [{ price: product.stripe_price_id, quantity: 1 }]
+      : [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: product.name,
+                description: product.short_description || undefined,
+                images: product.thumbnail_url ? [product.thumbnail_url] : undefined,
+              },
+              unit_amount: product.price_cents,
+            },
+            quantity: 1,
+          },
+        ];
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: product.name,
-              description: product.short_description || undefined,
-              images: product.thumbnail_url ? [product.thumbnail_url] : undefined,
-            },
-            unit_amount: product.price_cents,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: 'payment',
-      success_url: `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/products/${product.slug}`,
       metadata: {
         product_id: product.id,

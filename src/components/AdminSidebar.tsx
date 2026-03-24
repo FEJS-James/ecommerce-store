@@ -19,8 +19,8 @@ export default function AdminSidebar() {
     <aside className="w-64 bg-gray-900 text-white min-h-screen flex flex-col shrink-0">
       <div className="p-6 border-b border-gray-800">
         <Link href="/admin" className="flex items-center gap-2 font-bold text-xl">
-          <span className="text-2xl">⚡</span>
-          <span>DigiStore Admin</span>
+          <span className="text-2xl">🛡️</span>
+          <span>AI Armory Admin</span>
         </Link>
       </div>
 

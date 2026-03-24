@@ -209,7 +209,7 @@ export default function CustomerDashboard() {
       <div className="bg-gray-900 text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-2xl">⚡</Link>
+            <Link href="/" className="text-2xl">🛡️</Link>
             <div>
               <h1 className="text-xl font-bold">My Account</h1>
               <p className="text-gray-400 text-sm">{customer.email}</p>
