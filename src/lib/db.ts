@@ -144,6 +144,13 @@ export async function initializeDb(): Promise<void> {
     // ignore
   }
 
+  // Migration: add stripe_product_id to products if not present
+  try {
+    await db.execute({ sql: `ALTER TABLE products ADD COLUMN stripe_product_id TEXT`, args: [] });
+  } catch {
+    // Column already exists
+  }
+
   // Check if products table is empty; if so, seed it
   const result = await db.execute({ sql: 'SELECT COUNT(*) as count FROM products', args: [] });
   const count = Number((result.rows[0] as unknown as { count: number }).count);
@@ -160,6 +167,9 @@ export async function initializeDb(): Promise<void> {
       await seedAdminUser();
     }
   }
+
+  // One-time migration: seed Stripe IDs for existing products
+  await seedStripeIds();
 }
 
 // Ensure schema is initialized (called lazily)
@@ -212,6 +222,33 @@ async function seedAdminUser() {
           WHERE NOT EXISTS (SELECT 1 FROM admin_users)`,
     args: [id, email, passwordHash, 'Admin', 'admin'],
   });
+}
+
+async function seedStripeIds() {
+  const db = getClient();
+
+  const stripeIds = [
+    { id: 'prod_001', stripe_product_id: 'prod_UCpDxGLzjAQ8gk', stripe_price_id: 'price_1TEPZVCY8jIaYoxblJuYhkeX' },
+    { id: 'prod_002', stripe_product_id: 'prod_UCpEx9khbSdBge', stripe_price_id: 'price_1TEPZtCY8jIaYoxbzcIGIimp' },
+    { id: 'prod_003', stripe_product_id: 'prod_UCpEswphukf4TI', stripe_price_id: 'price_1TEPZuCY8jIaYoxbznnOmtOE' },
+    { id: 'prod_004', stripe_product_id: 'prod_UCpEGxa2xsylYP', stripe_price_id: 'price_1TEPZuCY8jIaYoxbw8e0JuwQ' },
+    { id: 'prod_005', stripe_product_id: 'prod_UCpEhJa1vIzUWW', stripe_price_id: 'price_1TEPZvCY8jIaYoxbZ9zEuiel' },
+    { id: 'prod_006', stripe_product_id: 'prod_UCpEn9YUREtrai', stripe_price_id: 'price_1TEPZwCY8jIaYoxbxGO6O01m' },
+    { id: 'prod_007', stripe_product_id: 'prod_UCpEqy7XibWKim', stripe_price_id: 'price_1TEPaHCY8jIaYoxb9JoDGyLU' },
+    { id: 'prod_008', stripe_product_id: 'prod_UCpEw7Bx7CUG0B', stripe_price_id: 'price_1TEPaICY8jIaYoxbShElQXWa' },
+    { id: 'prod_009', stripe_product_id: 'prod_UCpEJCmFdCeCpS', stripe_price_id: 'price_1TEPaJCY8jIaYoxb3Pe3ymxj' },
+    { id: 'prod_010', stripe_product_id: 'prod_UCpEGZzf9FkpDu', stripe_price_id: 'price_1TEPaKCY8jIaYoxbrNiU3Fxy' },
+    { id: 'prod_011', stripe_product_id: 'prod_UCpE4DUoDdkHsw', stripe_price_id: 'price_1TEPaLCY8jIaYoxbroDjNy8n' },
+    { id: 'prod_012', stripe_product_id: 'prod_UCpE5dwIqMqV1Q', stripe_price_id: 'price_1TEPaLCY8jIaYoxb79BIaSvz' },
+  ];
+
+  // Only update products that don't already have a stripe_product_id
+  const statements = stripeIds.map((p) => ({
+    sql: `UPDATE products SET stripe_product_id = ?, stripe_price_id = ? WHERE id = ? AND stripe_product_id IS NULL`,
+    args: [p.stripe_product_id, p.stripe_price_id, p.id],
+  }));
+
+  await db.batch(statements, 'write');
 }
 
 async function seedProducts() {

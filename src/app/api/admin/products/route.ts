@@ -3,6 +3,7 @@ import { queryAll, queryOne, execute } from '@/lib/db';
 import { slugify } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { isAuthenticated } from '@/lib/auth';
+import { createStripeProduct } from '@/lib/stripe-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,13 +14,30 @@ export async function GET(request: NextRequest) {
 
   try {
     const status = request.nextUrl.searchParams.get('status');
+    const category = request.nextUrl.searchParams.get('category');
+    const search = request.nextUrl.searchParams.get('search');
 
     let query = 'SELECT * FROM products';
-    const params: string[] = [];
+    const conditions: string[] = [];
+    const params: (string | number)[] = [];
 
     if (status) {
-      query += ' WHERE status = ?';
+      conditions.push('status = ?');
       params.push(status);
+    }
+
+    if (category) {
+      conditions.push('category = ?');
+      params.push(category);
+    }
+
+    if (search) {
+      conditions.push('(name LIKE ? OR description LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
     }
 
     query += ' ORDER BY created_at DESC';
@@ -66,6 +84,23 @@ export async function POST(request: NextRequest) {
         body.featured ? 1 : 0,
       ]
     );
+
+    // Sync to Stripe only for active products (drafts sync later when activated)
+    const productStatus = body.status || 'active';
+    if (productStatus === 'active') {
+      const stripeResult = await createStripeProduct({
+        name: body.name,
+        description: body.description || undefined,
+        price_cents: body.price_cents || 0,
+      });
+
+      if (stripeResult) {
+        await execute(
+          `UPDATE products SET stripe_product_id = ?, stripe_price_id = ? WHERE id = ?`,
+          [stripeResult.stripe_product_id, stripeResult.stripe_price_id, id]
+        );
+      }
+    }
 
     const product = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
     return NextResponse.json({ product }, { status: 201 });
