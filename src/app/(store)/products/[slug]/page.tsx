@@ -11,6 +11,14 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+function formatFileSize(bytes: number): string {
+  if (!bytes || bytes <= 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
 
@@ -30,6 +38,13 @@ export default async function ProductPage({ params }: PageProps) {
 
   const category = CATEGORIES[product.category];
   const faqs = CATEGORY_FAQS[product.category] || [];
+
+  // Parse preview images safely
+  let previewImages: string[] = [];
+  try {
+    const parsed = JSON.parse(product.preview_images || '[]');
+    previewImages = Array.isArray(parsed) ? parsed : [];
+  } catch { /* ignore */ }
 
   // Simple markdown-ish rendering
   function renderDescription(text: string) {
@@ -97,6 +112,8 @@ export default async function ProductPage({ params }: PageProps) {
     return elements;
   }
 
+  const hasFileInfo = product.file_name || product.file_size_bytes > 0;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -130,31 +147,23 @@ export default async function ProductPage({ params }: PageProps) {
           )}
 
           {/* Preview Images Gallery */}
-          {(() => {
-            let previews: string[] = [];
-            try {
-              const parsed = JSON.parse(product.preview_images || '[]');
-              previews = Array.isArray(parsed) ? parsed : [];
-            } catch { /* ignore */ }
-            if (previews.length === 0) return null;
-            return (
-              <div className="mb-8">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Preview</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {previews.map((url, i) => (
-                    <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={url}
-                        alt={`${product.name} preview ${i + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
+          {previewImages.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Preview</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {previewImages.map((url, i) => (
+                  <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt={`${product.name} preview ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
               </div>
-            );
-          })()}
+            </div>
+          )}
 
           {/* Description */}
           <div className="prose max-w-none">
@@ -215,6 +224,27 @@ export default async function ProductPage({ params }: PageProps) {
               className="mb-6"
             />
 
+            {/* File Info */}
+            {hasFileInfo && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">File Details</h3>
+                <div className="space-y-1.5 text-sm text-gray-700">
+                  {product.file_name && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400">📄</span>
+                      <span className="truncate">{product.file_name}</span>
+                    </div>
+                  )}
+                  {product.file_size_bytes > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400">💾</span>
+                      <span>{formatFileSize(product.file_size_bytes)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-3 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <span>⚡</span>
@@ -238,7 +268,7 @@ export default async function ProductPage({ params }: PageProps) {
       </div>
 
       {/* Related Products */}
-      {relatedProducts.length > 0 && (
+      {Array.isArray(relatedProducts) && relatedProducts.length > 0 && (
         <section className="mt-16">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
