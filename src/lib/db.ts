@@ -146,16 +146,19 @@ export async function initializeDb(): Promise<void> {
 
   // Check if products table is empty; if so, seed it
   const result = await db.execute({ sql: 'SELECT COUNT(*) as count FROM products', args: [] });
-  const count = (result.rows[0] as unknown as { count: number }).count;
+  const count = Number((result.rows[0] as unknown as { count: number }).count);
   if (count === 0) {
     await seedProducts();
   }
 
-  // Seed default admin user if none exists
-  const adminCount = await db.execute({ sql: 'SELECT COUNT(*) as count FROM admin_users', args: [] });
-  const admins = (adminCount.rows[0] as unknown as { count: number }).count;
-  if (admins === 0) {
-    await seedAdminUser();
+  // Seed admin user only when BOTH env vars are explicitly set (CI/production headless setup).
+  // If neither is set, skip seeding so the interactive setup endpoint can handle first-admin creation.
+  if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+    const adminCount = await db.execute({ sql: 'SELECT COUNT(*) as count FROM admin_users', args: [] });
+    const admins = Number((adminCount.rows[0] as unknown as { count: number }).count);
+    if (admins === 0) {
+      await seedAdminUser();
+    }
   }
 }
 
@@ -192,23 +195,22 @@ export async function execute(sql: string, args: InArgs = []) {
 }
 
 async function seedAdminUser() {
-  // Dynamic import to avoid circular dependency at module level
+  // Only called when both ADMIN_EMAIL and ADMIN_PASSWORD env vars are set
   const bcrypt = await import('bcryptjs');
   const db = getClient();
 
-  const defaultEmail = process.env.ADMIN_EMAIL || 'admin@store.local';
-  const defaultPassword = process.env.ADMIN_PASSWORD || 'admin';
+  const email = process.env.ADMIN_EMAIL!;
+  const password = process.env.ADMIN_PASSWORD!;
 
-  if (!process.env.ADMIN_PASSWORD) {
-    console.warn('⚠️  WARNING: Seeding admin with default password "admin". Set ADMIN_PASSWORD env var for production!');
-  }
-  const passwordHash = await bcrypt.hash(defaultPassword, 10);
+  const passwordHash = await bcrypt.hash(password, 10);
   const id = crypto.randomUUID();
 
+  // Atomic insert: only succeeds if no admin exists yet
   await db.execute({
     sql: `INSERT INTO admin_users (id, email, password_hash, name, role)
-          VALUES (?, ?, ?, ?, ?)`,
-    args: [id, defaultEmail, passwordHash, 'Admin', 'admin'],
+          SELECT ?, ?, ?, ?, ?
+          WHERE NOT EXISTS (SELECT 1 FROM admin_users)`,
+    args: [id, email, passwordHash, 'Admin', 'admin'],
   });
 }
 
