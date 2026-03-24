@@ -77,6 +77,7 @@ export default function AdminProductsPage() {
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Price</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Category</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">File</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Downloads</th>
                     <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -94,6 +95,19 @@ export default function AdminProductsPage() {
                         <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                           {CATEGORIES[product.category]?.label || product.category}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {product.file_url ? (
+                          <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            {product.file_name || 'Uploaded'}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                            No file
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <button
@@ -136,10 +150,21 @@ export default function AdminProductsPage() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Product Form with file upload + preview image management
+// ---------------------------------------------------------------------------
 interface ProductFormProps {
   product: Product | null;
   onClose: () => void;
   onSaved: () => void;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 }
 
 function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
@@ -160,10 +185,123 @@ function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
   });
   const [saving, setSaving] = useState(false);
 
+  // File upload state
+  const [fileUploading, setFileUploading] = useState(false);
+  const [fileError, setFileError] = useState('');
+  const [fileSuccess, setFileSuccess] = useState('');
+  const [currentFile, setCurrentFile] = useState<{
+    name: string;
+    size: number;
+  } | null>(
+    product?.file_name
+      ? { name: product.file_name, size: product.file_size_bytes }
+      : null
+  );
+
+  // Preview images state
+  const [previewImages, setPreviewImages] = useState<string[]>(() => {
+    try {
+      const parsed = JSON.parse(product?.preview_images || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+  const [previewUploading, setPreviewUploading] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+
   function updateField(field: string, value: string | number) {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (field === 'name' && !product) {
       setForm((prev) => ({ ...prev, slug: slugify(value as string) }));
+    }
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !product) return;
+
+    setFileError('');
+    setFileSuccess('');
+    setFileUploading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setFileError(data.error || 'Upload failed');
+      } else {
+        setFileSuccess(`Uploaded: ${data.file.name} (${formatBytes(data.file.size)})`);
+        setCurrentFile({ name: data.file.name, size: data.file.size });
+        setForm((prev) => ({
+          ...prev,
+          file_url: data.file.url,
+          file_name: data.file.name,
+        }));
+      }
+    } catch {
+      setFileError('Network error during upload');
+    } finally {
+      setFileUploading(false);
+      // Reset input so the same file can be re-selected
+      e.target.value = '';
+    }
+  }
+
+  async function handlePreviewUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !product) return;
+
+    setPreviewError('');
+    setPreviewUploading(true);
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('images', files[i]);
+    }
+
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}/previews`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPreviewError(data.error || 'Upload failed');
+      } else {
+        setPreviewImages(data.preview_images || []);
+      }
+    } catch {
+      setPreviewError('Network error during upload');
+    } finally {
+      setPreviewUploading(false);
+      e.target.value = '';
+    }
+  }
+
+  async function handlePreviewDelete(url: string) {
+    if (!product || !confirm('Remove this preview image?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}/previews`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPreviewImages(data.preview_images || []);
+      }
+    } catch {
+      // Silently fail — image may already be gone
     }
   }
 
@@ -287,19 +425,6 @@ function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">File URL</label>
-            <input
-              type="url"
-              value={form.file_url}
-              onChange={(e) => updateField('file_url', e.target.value)}
-              placeholder="Phase 2 — file hosting"
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 text-sm"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={form.status}
@@ -311,6 +436,9 @@ function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
               <option value="archived">Archived</option>
             </select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tags (JSON array)</label>
             <input
@@ -332,6 +460,115 @@ function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
             </label>
           </div>
         </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* Product File Upload (only shown when editing existing product) */}
+        {/* ------------------------------------------------------------ */}
+        {product && (
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              📎 Product File
+            </h3>
+
+            {currentFile ? (
+              <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                <span className="text-green-600 text-lg">✅</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-green-800 truncate">{currentFile.name}</p>
+                  <p className="text-xs text-green-600">{formatBytes(currentFile.size)}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3">
+                <span className="text-yellow-600 text-lg">⚠️</span>
+                <p className="text-sm text-yellow-800">No file uploaded yet. Customers won&apos;t be able to download anything.</p>
+              </div>
+            )}
+
+            <div>
+              <label className="block">
+                <span className="sr-only">Upload product file</span>
+                <input
+                  type="file"
+                  onChange={handleFileUpload}
+                  disabled={fileUploading}
+                  accept=".pdf,.zip,.xlsx,.csv,.png,.jpg,.jpeg"
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
+                />
+              </label>
+              <p className="text-xs text-gray-500 mt-1">PDF, ZIP, XLSX, CSV, PNG, JPG — max 50MB</p>
+            </div>
+
+            {fileUploading && (
+              <div className="flex items-center gap-2 text-sm text-indigo-600">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Uploading...
+              </div>
+            )}
+            {fileError && <p className="text-sm text-red-600">{fileError}</p>}
+            {fileSuccess && <p className="text-sm text-green-600">{fileSuccess}</p>}
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------ */}
+        {/* Preview Images (only shown when editing existing product)      */}
+        {/* ------------------------------------------------------------ */}
+        {product && (
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              🖼️ Preview Images
+            </h3>
+
+            {previewImages.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {previewImages.map((url, i) => (
+                  <div key={i} className="relative group rounded-lg overflow-hidden border border-gray-200">
+                    <img src={url} alt={`Preview ${i + 1}`} className="w-full h-24 object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handlePreviewDelete(url)}
+                      className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No preview images yet.</p>
+            )}
+
+            <div>
+              <label className="block">
+                <span className="sr-only">Upload preview images</span>
+                <input
+                  type="file"
+                  onChange={handlePreviewUpload}
+                  disabled={previewUploading}
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  multiple
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
+                />
+              </label>
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG, WebP, GIF — max 10MB each. Select multiple files at once.</p>
+            </div>
+
+            {previewUploading && (
+              <div className="flex items-center gap-2 text-sm text-indigo-600">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Uploading previews...
+              </div>
+            )}
+            {previewError && <p className="text-sm text-red-600">{previewError}</p>}
+          </div>
+        )}
 
         <div className="flex gap-3 pt-4">
           <button

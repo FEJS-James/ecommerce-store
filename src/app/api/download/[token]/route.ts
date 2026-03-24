@@ -32,8 +32,15 @@ export async function GET(
     }
 
     // Check expiry
-    if (order.token_expires_at && new Date(order.token_expires_at) < new Date()) {
-      return NextResponse.json({ error: 'Download link has expired' }, { status: 410 });
+    if (order.token_expires_at) {
+      const expiresAt = new Date(
+        order.token_expires_at.endsWith('Z')
+          ? order.token_expires_at
+          : order.token_expires_at + 'Z'
+      );
+      if (expiresAt < new Date()) {
+        return NextResponse.json({ error: 'Download link has expired' }, { status: 410 });
+      }
     }
 
     // Check download limit
@@ -57,14 +64,45 @@ export async function GET(
       );
     }
 
-    // Increment download count
+    // Increment download count on order
     await execute(
       "UPDATE orders SET download_count = download_count + 1, downloaded_at = datetime('now') WHERE id = ?",
       [order.id]
     );
 
-    // Redirect to file URL
-    return NextResponse.redirect(product.file_url);
+    // Increment product-level download count
+    await execute(
+      'UPDATE products SET download_count = download_count + 1 WHERE id = ?',
+      [order.product_id]
+    );
+
+    // Generate a time-limited signed URL if using Vercel Blob, otherwise redirect directly.
+    // Vercel Blob public URLs are already accessible, but we proxy the download
+    // to avoid exposing the raw blob URL to the customer.
+    // We fetch the file and stream it back with appropriate headers.
+    try {
+      const fileResponse = await fetch(product.file_url);
+      if (!fileResponse.ok) {
+        return NextResponse.json({ error: 'Failed to fetch file from storage' }, { status: 502 });
+      }
+
+      const filename = product.file_name || 'download';
+      const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
+
+      return new NextResponse(fileResponse.body, {
+        status: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    } catch {
+      // Do NOT fall back to redirecting to the raw blob URL — that would
+      // expose the storage URL to the customer, defeating the proxy.
+      return NextResponse.json({ error: 'Failed to fetch file' }, { status: 502 });
+    }
   } catch (error) {
     console.error('Download error:', error);
     return NextResponse.json({ error: 'Download failed' }, { status: 500 });

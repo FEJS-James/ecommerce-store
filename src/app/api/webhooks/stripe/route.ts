@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
       // Generate download token
       const downloadToken = crypto.randomBytes(32).toString('hex');
-      const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const tokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
 
       // Upsert customer (auto-create account on checkout)
       let customerId: string | null = null;
