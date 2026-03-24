@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryOne, execute } from '@/lib/db';
 import { isAuthenticated } from '@/lib/auth';
+import {
+  updateStripeProduct,
+  updateStripePrice,
+  archiveStripeProduct,
+} from '@/lib/stripe-sync';
 
 const ALLOWED_FIELDS = [
   'name', 'slug', 'description', 'short_description', 'price_cents',
@@ -9,8 +14,19 @@ const ALLOWED_FIELDS = [
   'status', 'featured',
 ];
 
-async function updateProduct(id: string, body: Record<string, unknown>) {
-  const existing = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
+interface ProductRecord {
+  id: string;
+  name: string;
+  description: string;
+  price_cents: number;
+  stripe_product_id: string | null;
+  stripe_price_id: string | null;
+  status: string;
+  [key: string]: unknown;
+}
+
+async function updateProductHandler(id: string, body: Record<string, unknown>) {
+  const existing = await queryOne<ProductRecord>('SELECT * FROM products WHERE id = ?', [id]);
   if (!existing) {
     return NextResponse.json({ error: 'Product not found' }, { status: 404 });
   }
@@ -34,6 +50,35 @@ async function updateProduct(id: string, body: Record<string, unknown>) {
 
   await execute(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`, values);
 
+  // Stripe sync: update name/description if changed
+  if (existing.stripe_product_id) {
+    const stripeUpdates: { name?: string; description?: string } = {};
+    if ('name' in body && body.name !== existing.name) {
+      stripeUpdates.name = body.name as string;
+    }
+    if ('description' in body && body.description !== existing.description) {
+      stripeUpdates.description = body.description as string;
+    }
+    if (Object.keys(stripeUpdates).length > 0) {
+      await updateStripeProduct(existing.stripe_product_id, stripeUpdates);
+    }
+
+    // Stripe sync: update price if changed (create new price, archive old)
+    if ('price_cents' in body && body.price_cents !== existing.price_cents) {
+      const newPriceId = await updateStripePrice(
+        existing.stripe_product_id,
+        existing.stripe_price_id,
+        body.price_cents as number
+      );
+      if (newPriceId) {
+        await execute(
+          `UPDATE products SET stripe_price_id = ? WHERE id = ?`,
+          [newPriceId, id]
+        );
+      }
+    }
+  }
+
   const updated = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
   return NextResponse.json({ product: updated });
 }
@@ -49,7 +94,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    return updateProduct(id, body);
+    return updateProductHandler(id, body);
   } catch (error) {
     console.error('Update product error:', error);
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
@@ -67,7 +112,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    return updateProduct(id, body);
+    return updateProductHandler(id, body);
   } catch (error) {
     console.error('Update product error:', error);
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
@@ -85,12 +130,22 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const existing = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
+    const existing = await queryOne<ProductRecord>('SELECT * FROM products WHERE id = ?', [id]);
     if (!existing) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    await execute('DELETE FROM products WHERE id = ?', [id]);
+    // Soft delete: set status to archived instead of hard delete
+    await execute(
+      `UPDATE products SET status = 'archived', updated_at = datetime('now') WHERE id = ?`,
+      [id]
+    );
+
+    // Archive in Stripe if synced
+    if (existing.stripe_product_id) {
+      await archiveStripeProduct(existing.stripe_product_id);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Delete product error:', error);
