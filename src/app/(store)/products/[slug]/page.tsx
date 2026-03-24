@@ -129,6 +129,30 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
           )}
 
+          {/* Preview Images Gallery */}
+          {(() => {
+            let previews: string[] = [];
+            try { previews = JSON.parse(product.preview_images || '[]'); } catch { /* ignore */ }
+            if (previews.length === 0) return null;
+            return (
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Preview</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {previews.map((url, i) => (
+                    <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt={`${product.name} preview ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Description */}
           <div className="prose max-w-none">
             {renderDescription(product.description)}
