@@ -16,15 +16,21 @@ export async function POST(request: NextRequest) {
 
     let event;
 
-    if (process.env.STRIPE_WEBHOOK_SECRET && signature) {
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 503 });
+      }
+      // Dev only: accept without verification
+      event = JSON.parse(body);
+    } else if (!signature) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
+    } else {
       try {
         event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET);
       } catch (err) {
         console.error('Webhook signature verification failed:', err);
         return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
       }
-    } else {
-      event = JSON.parse(body);
     }
 
     // Ensure DB is initialized for all handlers
@@ -86,7 +92,7 @@ async function handleCheckoutCompleted(session: Record<string, unknown>) {
       [customerId, customerEmail, customerName || null, amountCents, resetToken, resetExpires]
     );
 
-    console.log(`[Auto-account] Created account for ${customerEmail}. Reset token: ${resetToken}`);
+    console.log(`[Auto-account] Created account for ${customerEmail}`);
   }
 
   // Create order — linked to customer
