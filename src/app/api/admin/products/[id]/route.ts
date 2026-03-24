@@ -1,11 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { queryOne, execute } from '@/lib/db';
+import { queryOne, queryAll, execute } from '@/lib/db';
 import { isAuthenticated } from '@/lib/auth';
 import {
   updateStripeProduct,
   updateStripePrice,
   archiveStripeProduct,
 } from '@/lib/stripe-sync';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    const product = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
+
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    const stats = await queryOne<{ sales_count: number; total_revenue: number }>(`
+      SELECT COUNT(*) as sales_count, COALESCE(SUM(amount_cents), 0) as total_revenue
+      FROM orders WHERE product_id = ? AND status = 'completed'
+    `, [id]);
+
+    return NextResponse.json({
+      product,
+      stats: {
+        salesCount: stats?.sales_count ?? 0,
+        totalRevenue: stats?.total_revenue ?? 0,
+      },
+    });
+  } catch (error) {
+    console.error('Get product error:', error);
+    return NextResponse.json({ error: 'Failed to load product' }, { status: 500 });
+  }
+}
 
 const ALLOWED_FIELDS = [
   'name', 'slug', 'description', 'short_description', 'price_cents',
