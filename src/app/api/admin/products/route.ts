@@ -58,8 +58,45 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Validate name (required, non-empty string)
+    if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
+      return NextResponse.json({ error: 'Product name is required' }, { status: 400 });
+    }
+
+    // Validate price_cents (non-negative integer, if provided)
+    if (body.price_cents !== undefined) {
+      if (typeof body.price_cents !== 'number' || body.price_cents < 0 || !Number.isInteger(body.price_cents)) {
+        return NextResponse.json({ error: 'Price must be a non-negative integer' }, { status: 400 });
+      }
+    }
+
+    // Validate category (non-empty string, if provided)
+    if (body.category !== undefined && body.category !== null) {
+      if (typeof body.category !== 'string' || body.category.trim().length === 0) {
+        return NextResponse.json({ error: 'Category must be a non-empty string' }, { status: 400 });
+      }
+    }
+
+    // Validate tags (valid JSON string, if provided)
+    if (body.tags !== undefined && body.tags !== null) {
+      if (typeof body.tags !== 'string') {
+        return NextResponse.json({ error: 'Tags must be a valid JSON string' }, { status: 400 });
+      }
+      try {
+        JSON.parse(body.tags);
+      } catch {
+        return NextResponse.json({ error: 'Tags must be a valid JSON string' }, { status: 400 });
+      }
+    }
+
     const id = uuidv4().replace(/-/g, '');
     const slug = body.slug || slugify(body.name);
+
+    // Check slug uniqueness
+    const existing = await queryOne('SELECT id FROM products WHERE slug = ?', [slug]);
+    if (existing) {
+      return NextResponse.json({ error: 'A product with this slug already exists' }, { status: 409 });
+    }
 
     await execute(
       `INSERT INTO products (id, name, slug, description, short_description, price_cents, compare_price_cents, category, tags, file_url, file_name, file_size_bytes, preview_images, thumbnail_url, stripe_price_id, status, featured)

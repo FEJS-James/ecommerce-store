@@ -57,6 +57,17 @@ export async function GET() {
     const totalCustomers = await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM customers');
     const totalSubscribers = await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM email_subscribers WHERE unsubscribed_at IS NULL');
 
+    const productCounts = await queryAll<{ status: string; count: number }>(`
+      SELECT status, COUNT(*) as count FROM products GROUP BY status
+    `);
+
+    const dailyOrders = await queryAll<{ date: string; count: number }>(`
+      SELECT date(created_at) as date, COUNT(*) as count
+      FROM orders WHERE created_at >= datetime('now', '-30 days')
+      GROUP BY date(created_at)
+      ORDER BY date ASC
+    `);
+
     return NextResponse.json({
       revenue: {
         today: todayRevenue?.total ?? 0,
@@ -65,10 +76,12 @@ export async function GET() {
         allTime: allTimeRevenue?.total ?? 0,
       },
       dailyRevenue,
+      dailyOrders,
       topProducts,
       recentOrders,
       totalCustomers: totalCustomers?.count ?? 0,
       totalSubscribers: totalSubscribers?.count ?? 0,
+      productCounts,
     });
   } catch (error) {
     console.error('Dashboard error:', error);

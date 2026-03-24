@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
     }
 
     // List all orders with filters
+    const status = request.nextUrl.searchParams.get('status');
+    const search = request.nextUrl.searchParams.get('search');
+
     let query = `
       SELECT o.*, p.name as product_name
       FROM orders o
@@ -54,6 +57,14 @@ export async function GET(request: NextRequest) {
     if (endDate) {
       query += ' AND date(o.created_at) <= ?';
       params.push(endDate);
+    }
+    if (status) {
+      query += ' AND o.status = ?';
+      params.push(status);
+    }
+    if (search) {
+      query += ' AND (o.customer_email LIKE ? OR o.customer_name LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
     }
 
     query += ' ORDER BY o.created_at DESC';
