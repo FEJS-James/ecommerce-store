@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'DigiStore — Premium Digital Products',
-  description: 'Tools, templates & guides for modern creators. Instant delivery, lifetime access.',
+  title: 'AI Armory — Your Arsenal of AI-Powered Digital Products',
+  description: 'Premium AI-powered digital products, templates, prompt packs, and guides. Instant delivery, lifetime access.',
 };
 
 export default function RootLayout({

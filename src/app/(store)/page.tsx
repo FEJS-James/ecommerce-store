@@ -23,11 +23,11 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
-              Digital Products That{' '}
-              <span className="text-indigo-400">Actually Deliver</span>
+              Your Arsenal of{' '}
+              <span className="text-indigo-400">AI-Powered Digital Products</span>
             </h1>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Premium templates, prompt packs, and guides for creators, developers, and professionals. 
+              Premium templates, prompt packs, and guides for creators, developers, and professionals.
               No fluff. No filler. Just tools that work.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
