@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryOne, execute } from '@/lib/db';
 import { isAuthenticated } from '@/lib/auth';
-import { archiveStripeProduct, reactivateStripeProduct } from '@/lib/stripe-sync';
+import { archiveStripeProduct, reactivateStripeProduct, createStripeProduct } from '@/lib/stripe-sync';
 
 const VALID_STATUSES = ['draft', 'active', 'archived'] as const;
 type ProductStatus = (typeof VALID_STATUSES)[number];
 
 interface ProductRecord {
   id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
   status: string;
   stripe_product_id: string | null;
+  stripe_price_id: string | null;
   [key: string]: unknown;
 }
 
@@ -47,12 +51,27 @@ export async function PATCH(
     );
 
     // Stripe sync based on status transition
-    if (existing.stripe_product_id) {
-      if (newStatus === 'archived' && oldStatus !== 'archived') {
-        await archiveStripeProduct(existing.stripe_product_id);
-      } else if (newStatus === 'active' && oldStatus === 'archived') {
+    if (newStatus === 'active' && oldStatus !== 'active') {
+      if (existing.stripe_product_id) {
+        // Reactivate existing Stripe product (e.g. archived → active)
         await reactivateStripeProduct(existing.stripe_product_id);
+      } else {
+        // Create new Stripe product (e.g. draft → active)
+        const stripeResult = await createStripeProduct({
+          name: existing.name,
+          description: existing.description || undefined,
+          price_cents: existing.price_cents,
+        });
+
+        if (stripeResult) {
+          await execute(
+            `UPDATE products SET stripe_product_id = ?, stripe_price_id = ? WHERE id = ?`,
+            [stripeResult.stripe_product_id, stripeResult.stripe_price_id, id]
+          );
+        }
       }
+    } else if (newStatus === 'archived' && oldStatus !== 'archived' && existing.stripe_product_id) {
+      await archiveStripeProduct(existing.stripe_product_id);
     }
 
     const updated = await queryOne('SELECT * FROM products WHERE id = ?', [id]);

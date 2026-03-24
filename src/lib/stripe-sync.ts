@@ -1,12 +1,17 @@
 import Stripe from 'stripe';
 
+let _stripe: Stripe | null | undefined;
+
 function getStripe(): Stripe | null {
+  if (_stripe !== undefined) return _stripe;
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) {
     console.warn('[stripe-sync] STRIPE_SECRET_KEY not set — skipping Stripe sync');
+    _stripe = null;
     return null;
   }
-  return new Stripe(key);
+  _stripe = new Stripe(key);
+  return _stripe;
 }
 
 /**

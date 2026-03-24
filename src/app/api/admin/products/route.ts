@@ -85,18 +85,21 @@ export async function POST(request: NextRequest) {
       ]
     );
 
-    // Sync to Stripe (conditional — skips gracefully if STRIPE_SECRET_KEY not set)
-    const stripeResult = await createStripeProduct({
-      name: body.name,
-      description: body.description || undefined,
-      price_cents: body.price_cents || 0,
-    });
+    // Sync to Stripe only for active products (drafts sync later when activated)
+    const productStatus = body.status || 'active';
+    if (productStatus === 'active') {
+      const stripeResult = await createStripeProduct({
+        name: body.name,
+        description: body.description || undefined,
+        price_cents: body.price_cents || 0,
+      });
 
-    if (stripeResult) {
-      await execute(
-        `UPDATE products SET stripe_product_id = ?, stripe_price_id = ? WHERE id = ?`,
-        [stripeResult.stripe_product_id, stripeResult.stripe_price_id, id]
-      );
+      if (stripeResult) {
+        await execute(
+          `UPDATE products SET stripe_product_id = ?, stripe_price_id = ? WHERE id = ?`,
+          [stripeResult.stripe_product_id, stripeResult.stripe_price_id, id]
+        );
+      }
     }
 
     const product = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
