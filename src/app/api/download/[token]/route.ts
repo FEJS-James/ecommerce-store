@@ -99,8 +99,9 @@ export async function GET(
         },
       });
     } catch {
-      // Fallback: redirect to file URL (e.g. if proxy fails)
-      return NextResponse.redirect(product.file_url);
+      // Do NOT fall back to redirecting to the raw blob URL — that would
+      // expose the storage URL to the customer, defeating the proxy.
+      return NextResponse.json({ error: 'Failed to fetch file' }, { status: 502 });
     }
   } catch (error) {
     console.error('Download error:', error);

@@ -201,7 +201,8 @@ function ProductForm({ product, onClose, onSaved }: ProductFormProps) {
   // Preview images state
   const [previewImages, setPreviewImages] = useState<string[]>(() => {
     try {
-      return JSON.parse(product?.preview_images || '[]');
+      const parsed = JSON.parse(product?.preview_images || '[]');
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }

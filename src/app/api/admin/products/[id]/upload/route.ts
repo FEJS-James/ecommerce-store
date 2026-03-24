@@ -7,6 +7,8 @@ import {
   isBlobConfigured,
   ALLOWED_FILE_TYPES,
   MAX_FILE_SIZE,
+  ALLOWED_FILE_EXTENSIONS,
+  validateExtensionMime,
 } from '@/lib/blob';
 
 export async function POST(
@@ -52,6 +54,12 @@ export async function POST(
         },
         { status: 400 }
       );
+    }
+
+    // Defense-in-depth: cross-check file extension against MIME type
+    const extError = validateExtensionMime(file.name, file.type, ALLOWED_FILE_EXTENSIONS);
+    if (extError) {
+      return NextResponse.json({ error: extError }, { status: 400 });
     }
 
     // Validate file size

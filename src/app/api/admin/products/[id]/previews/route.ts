@@ -7,6 +7,8 @@ import {
   isBlobConfigured,
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGE_SIZE,
+  ALLOWED_IMAGE_EXTENSIONS,
+  validateExtensionMime,
 } from '@/lib/blob';
 
 export async function POST(
@@ -64,12 +66,18 @@ export async function POST(
           { status: 400 }
         );
       }
+      // Defense-in-depth: cross-check file extension against MIME type
+      const extError = validateExtensionMime(file.name, file.type, ALLOWED_IMAGE_EXTENSIONS);
+      if (extError) {
+        return NextResponse.json({ error: extError }, { status: 400 });
+      }
     }
 
-    // Parse existing preview images
+    // Parse existing preview images (with Array.isArray guard for safety)
     let existingImages: string[] = [];
     try {
-      existingImages = JSON.parse(product.preview_images || '[]');
+      const parsed = JSON.parse(product.preview_images || '[]');
+      existingImages = Array.isArray(parsed) ? parsed : [];
     } catch {
       existingImages = [];
     }
@@ -136,9 +144,15 @@ export async function DELETE(
 
     let images: string[] = [];
     try {
-      images = JSON.parse(product.preview_images || '[]');
+      const parsed = JSON.parse(product.preview_images || '[]');
+      images = Array.isArray(parsed) ? parsed : [];
     } catch {
       images = [];
+    }
+
+    // Validate the URL actually belongs to this product's previews
+    if (!images.includes(urlToRemove)) {
+      return NextResponse.json({ error: 'URL not found in product previews' }, { status: 404 });
     }
 
     const filtered = images.filter((url) => url !== urlToRemove);

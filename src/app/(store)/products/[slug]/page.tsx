@@ -132,7 +132,10 @@ export default async function ProductPage({ params }: PageProps) {
           {/* Preview Images Gallery */}
           {(() => {
             let previews: string[] = [];
-            try { previews = JSON.parse(product.preview_images || '[]'); } catch { /* ignore */ }
+            try {
+              const parsed = JSON.parse(product.preview_images || '[]');
+              previews = Array.isArray(parsed) ? parsed : [];
+            } catch { /* ignore */ }
             if (previews.length === 0) return null;
             return (
               <div className="mb-8">
