@@ -18,24 +18,11 @@ export async function POST(request: NextRequest) {
   try {
     await ensureDb();
 
-    // Check if any admin already exists — if so, this endpoint is permanently sealed
-    const result = await queryOne<AdminCount>(
-      'SELECT COUNT(*) as count FROM admin_users',
-      []
-    );
-
-    if (result && result.count > 0) {
-      return NextResponse.json(
-        { error: 'Setup already completed' },
-        { status: 403 }
-      );
-    }
-
     // Parse and validate request body
     const body = await request.json();
     const { email, password, name } = body;
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
         { error: 'A valid email is required' },
         { status: 400 }
@@ -49,18 +36,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const adminName = (name && typeof name === 'string') ? name.trim() : 'Admin';
+    const adminName = (name && typeof name === 'string') ? name.trim().slice(0, 100) : 'Admin';
 
     // Hash the password using the same bcrypt config as the auth system
     const passwordHash = await hashPassword(password);
     const id = crypto.randomUUID();
 
-    // Create the admin account
-    await execute(
+    // Atomic insert: only succeeds if no admin exists yet (prevents TOCTOU race condition)
+    const result = await execute(
       `INSERT INTO admin_users (id, email, password_hash, name, role)
-       VALUES (?, ?, ?, ?, ?)`,
+       SELECT ?, ?, ?, ?, ?
+       WHERE NOT EXISTS (SELECT 1 FROM admin_users)`,
       [id, email.trim().toLowerCase(), passwordHash, adminName, 'admin']
     );
+
+    // If rowsAffected is 0, an admin already exists — endpoint is sealed
+    if (Number(result.rowsAffected) === 0) {
+      return NextResponse.json(
+        { error: 'Setup already completed' },
+        { status: 403 }
+      );
+    }
 
     // Fetch the created admin to return (without password_hash)
     const created = await queryOne<CreatedAdmin>(
@@ -91,7 +87,7 @@ export async function GET() {
       []
     );
 
-    const setupRequired = !result || result.count === 0;
+    const setupRequired = !result || Number(result.count) === 0;
 
     return NextResponse.json({
       setupRequired,
