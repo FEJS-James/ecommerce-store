@@ -59,6 +59,10 @@ export default async function AdminDashboardPage() {
     ORDER BY o.created_at DESC LIMIT 10
   `);
 
+  const avgOrderValue = (await queryOne<{ avg: number }>(`
+    SELECT COALESCE(AVG(amount_cents), 0) as avg FROM orders WHERE status = 'completed'
+  `))?.avg ?? 0;
+
   const totalCustomers = (await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM customers'))?.count ?? 0;
   const totalSubscribers = (await queryOne<{ count: number }>('SELECT COUNT(*) as count FROM email_subscribers WHERE unsubscribed_at IS NULL'))?.count ?? 0;
 
@@ -133,10 +137,7 @@ export default async function AdminDashboardPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <p className="text-sm text-gray-500 mb-1">Avg Order Value</p>
             <p className="text-2xl font-bold text-gray-900">
-              {Array.isArray(recentOrders) && recentOrders.length > 0
-                ? formatPrice(Math.round(recentOrders.reduce((sum, o) => sum + o.amount_cents, 0) / recentOrders.length))
-                : '$0.00'
-              }
+              {formatPrice(Math.round(avgOrderValue))}
             </p>
           </div>
         </div>

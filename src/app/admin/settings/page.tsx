@@ -13,7 +13,7 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [adminInfo, setAdminInfo] = useState<{ email: string; name: string } | null>(null);
-  const [storeConfig, setStoreConfig] = useState<{ stripeConfigured: boolean; blobConfigured: boolean } | null>(null);
+  const [storeConfig, setStoreConfig] = useState<{ stripeConfigured: boolean; blobConfigured: boolean; databaseUrl: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/me').then(r => r.json()).then(d => { if (d.email) setAdminInfo(d); }).catch(() => {});
@@ -79,7 +79,9 @@ export default function AdminSettingsPage() {
                   <span className="text-2xl">🗄️</span>
                   <div><p className="font-medium text-gray-900">Database</p><p className="text-xs text-gray-500">Turso / libSQL</p></div>
                 </div>
-                <span className="text-xs px-3 py-1 rounded-full font-medium bg-green-100 text-green-700">✅ Connected</span>
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${storeConfig?.databaseUrl === 'configured' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  {storeConfig?.databaseUrl === 'configured' ? '✅ Connected' : '❌ Not configured'}
+                </span>
               </div>
             </div>
           </div>
