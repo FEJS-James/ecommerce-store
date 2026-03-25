@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
-import Link from 'next/link';
-import ProductCard from '@/components/ProductCard';
-import { formatPrice } from '@/lib/utils';
-import { CheckCircle2, Download, KeyRound, ShoppingBag } from 'lucide-react';
-import type { Product, Order } from '@/lib/types';
+import { useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
+import ProductCard from "@/components/ProductCard";
+import { formatPrice } from "@/lib/utils";
+import { CheckCircle2, Download, KeyRound, ShoppingBag } from "lucide-react";
+import type { Product, Order } from "@/lib/types";
 
 interface OrderWithProduct extends Order {
   product_name?: string;
@@ -15,55 +15,55 @@ interface OrderWithProduct extends Order {
 }
 
 function AccountPrompt({ email }: { email: string }) {
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle');
-  const [message, setMessage] = useState('');
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [message, setMessage] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      setStatus('error');
-      setMessage('Passwords do not match');
+      setStatus("error");
+      setMessage("Passwords do not match");
       return;
     }
 
     if (password.length < 8) {
-      setStatus('error');
-      setMessage('Password must be at least 8 characters');
+      setStatus("error");
+      setMessage("Password must be at least 8 characters");
       return;
     }
 
-    setStatus('loading');
+    setStatus("loading");
 
     try {
-      const res = await fetch('/api/account/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/account/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name: name || undefined }),
       });
       const data = await res.json();
 
       if (res.ok) {
-        setStatus('success');
+        setStatus("success");
         setMessage(
-          'Account created! You can now access your purchases anytime.'
+          "Account created! You can now access your purchases anytime.",
         );
       } else {
-        setStatus('error');
-        setMessage(data.error || 'Failed to create account');
+        setStatus("error");
+        setMessage(data.error || "Failed to create account");
       }
     } catch {
-      setStatus('error');
-      setMessage('Network error. Please try again.');
+      setStatus("error");
+      setMessage("Network error. Please try again.");
     }
   }
 
-  if (status === 'success') {
+  if (status === "success") {
     return (
       <div className="glass rounded-2xl p-6 text-center border border-emerald-500/20">
         <div className="flex items-center justify-center gap-2 mb-2">
@@ -86,10 +86,7 @@ function AccountPrompt({ email }: { email: string }) {
   return (
     <div className="glass rounded-2xl p-6 border border-indigo-500/20">
       <div className="flex items-center gap-2 mb-2">
-        <KeyRound
-          className="w-5 h-5 text-indigo-400"
-          aria-hidden="true"
-        />
+        <KeyRound className="w-5 h-5 text-indigo-400" aria-hidden="true" />
         <h3 className="font-semibold text-white">Create Your Account</h3>
       </div>
       <p className="text-zinc-500 text-sm mb-4">
@@ -125,15 +122,15 @@ function AccountPrompt({ email }: { email: string }) {
           minLength={8}
           className="w-full px-4 py-2.5 rounded-lg glass-input text-sm"
         />
-        {status === 'error' && (
+        {status === "error" && (
           <p className="text-red-400 text-sm">{message}</p>
         )}
         <button
           type="submit"
-          disabled={status === 'loading'}
+          disabled={status === "loading"}
           className="w-full btn-gradient px-6 py-2.5 rounded-lg font-medium text-sm disabled:opacity-50 focus-glow"
         >
-          {status === 'loading' ? 'Creating account...' : 'Create Account'}
+          {status === "loading" ? "Creating account..." : "Create Account"}
         </button>
       </form>
     </div>
@@ -165,13 +162,7 @@ function CelebrationAnimation() {
             fill="none"
           />
           <defs>
-            <linearGradient
-              id="successGrad"
-              x1="0"
-              y1="0"
-              x2="80"
-              y2="80"
-            >
+            <linearGradient id="successGrad" x1="0" y1="0" x2="80" y2="80">
               <stop offset="0%" stopColor="#6366F1" />
               <stop offset="100%" stopColor="#10B981" />
             </linearGradient>
@@ -186,16 +177,16 @@ function CelebrationAnimation() {
             className="confetti-particle"
             style={
               {
-                '--delay': `${i * 0.1}s`,
-                '--x': `${(i % 4) * 25 - 37.5}%`,
-                '--rotation': `${i * 30}deg`,
-                '--color': [
-                  '#6366F1',
-                  '#8B5CF6',
-                  '#06B6D4',
-                  '#10B981',
-                  '#F59E0B',
-                  '#EC4899',
+                "--delay": `${i * 0.1}s`,
+                "--x": `${(i % 4) * 25 - 37.5}%`,
+                "--rotation": `${i * 30}deg`,
+                "--color": [
+                  "#6366F1",
+                  "#8B5CF6",
+                  "#06B6D4",
+                  "#10B981",
+                  "#F59E0B",
+                  "#EC4899",
                 ][i % 6],
               } as React.CSSProperties
             }
@@ -208,16 +199,16 @@ function CelebrationAnimation() {
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session_id');
-  const orderId = searchParams.get('order_id');
-  const verifyToken = searchParams.get('token');
+  const sessionId = searchParams.get("session_id");
+  const orderId = searchParams.get("order_id");
+  const verifyToken = searchParams.get("token");
   const [order, setOrder] = useState<OrderWithProduct | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    fetch('/api/account/me')
+    fetch("/api/account/me")
       .then((res) => {
         if (res.ok) setIsLoggedIn(true);
       })
@@ -273,17 +264,15 @@ function OrderSuccessContent() {
         </h1>
         <p className="text-lg text-zinc-500">
           {order
-            ? `Your order for ${order.product_name || 'your product'} has been confirmed.`
-            : 'Your order has been confirmed. Check your email for download instructions.'}
+            ? `Your order for ${order.product_name || "your product"} has been confirmed.`
+            : "Your order has been confirmed. Check your email for download instructions."}
         </p>
       </div>
 
       {order && (
         <div className="glass rounded-2xl p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-semibold text-white text-lg">
-              Order Details
-            </h2>
+            <h2 className="font-semibold text-white text-lg">Order Details</h2>
             {order.id && (
               <span className="text-xs text-zinc-600 font-mono">
                 Order #{String(order.id).slice(0, 8)}
@@ -294,7 +283,7 @@ function OrderSuccessContent() {
             <div className="flex justify-between">
               <span className="text-zinc-500">Product</span>
               <span className="font-medium text-white">
-                {order.product_name || 'Digital Product'}
+                {order.product_name || "Digital Product"}
               </span>
             </div>
             <div className="flex justify-between">
