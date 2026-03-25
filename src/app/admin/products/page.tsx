@@ -22,9 +22,21 @@ function DeleteConfirmationModal({
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onCancel]);
+
   async function handleConfirm() {
     setDeleting(true);
-    await onConfirm();
+    try {
+      await onConfirm();
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -173,18 +185,26 @@ export default function AdminProductsPage() {
   const isArchivedTab = filter === 'archived';
 
   async function handleStatusChange(id: string, newStatus: string) {
-    await fetch(`/api/admin/products/${id}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    loadProducts();
+    try {
+      await fetch(`/api/admin/products/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      loadProducts();
+    } catch {
+      alert('Action failed. Please try again.');
+    }
   }
 
   async function handleArchive(id: string) {
     if (!confirm('Are you sure you want to archive this product?')) return;
-    await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-    loadProducts();
+    try {
+      await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+      loadProducts();
+    } catch {
+      alert('Action failed. Please try again.');
+    }
   }
 
   function openDeleteModal(productsToDelete: { id: string; name: string }[]) {
@@ -193,26 +213,34 @@ export default function AdminProductsPage() {
 
   async function handlePermanentDelete() {
     if (!deleteModalProducts) return;
-    await Promise.all(
-      deleteModalProducts.map((p) =>
-        fetch(`/api/admin/products/${p.id}/hard-delete`, { method: 'DELETE' })
-      )
-    );
-    setDeleteModalProducts(null);
-    loadProducts();
+    try {
+      await Promise.all(
+        deleteModalProducts.map((p) =>
+          fetch(`/api/admin/products/${p.id}/hard-delete`, { method: 'DELETE' })
+        )
+      );
+      setDeleteModalProducts(null);
+      loadProducts();
+    } catch {
+      alert('Action failed. Please try again.');
+    }
   }
 
   async function handleBulkRestore() {
-    await Promise.all(
-      Array.from(selectedIds).map((id) =>
-        fetch(`/api/admin/products/${id}/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'draft' }),
-        })
-      )
-    );
-    loadProducts();
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map((id) =>
+          fetch(`/api/admin/products/${id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'draft' }),
+          })
+        )
+      );
+      loadProducts();
+    } catch {
+      alert('Action failed. Please try again.');
+    }
   }
 
   function toggleSelect(id: string) {

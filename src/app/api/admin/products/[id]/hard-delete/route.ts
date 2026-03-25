@@ -15,12 +15,16 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const existing = await queryOne<{ id: string; name: string }>(
-      'SELECT id, name FROM products WHERE id = ?',
+    const existing = await queryOne<{ id: string; name: string; status: string }>(
+      'SELECT id, name, status FROM products WHERE id = ?',
       [id]
     );
     if (!existing) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    if (existing.status !== 'archived') {
+      return NextResponse.json({ error: 'Only archived products can be permanently deleted' }, { status: 400 });
     }
 
     // Hard delete: permanently remove from database
