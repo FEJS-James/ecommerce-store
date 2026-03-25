@@ -14,9 +14,9 @@ export default async function AdminGuard({
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex" style={{ backgroundColor: '#0A0A0F' }}>
       <AdminSidebar />
-      <main className="flex-1 p-8 overflow-auto">{children}</main>
+      <main className="flex-1 p-4 sm:p-8 overflow-auto">{children}</main>
     </div>
   );
 }

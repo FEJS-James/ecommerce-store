@@ -3,6 +3,31 @@
 import { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import {
+  Settings,
+  CreditCard,
+  Database,
+  HardDrive,
+  Store,
+  Lock,
+  Wallet,
+  Smartphone,
+} from 'lucide-react';
+
+function ConnectionDot({ connected }: { connected: boolean }) {
+  return (
+    <div
+      className={`w-2 h-2 rounded-full flex-shrink-0 ${
+        connected ? 'bg-emerald-400' : 'bg-red-400'
+      }`}
+      style={{
+        boxShadow: connected
+          ? '0 0 8px rgba(52, 211, 153, 0.5)'
+          : '0 0 8px rgba(248, 113, 113, 0.5)',
+      }}
+    />
+  );
+}
 
 export default function AdminSettingsPage() {
   const { authenticated, checking } = useAdminAuth();
@@ -12,124 +37,398 @@ export default function AdminSettingsPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [adminInfo, setAdminInfo] = useState<{ email: string; name: string } | null>(null);
-  const [storeConfig, setStoreConfig] = useState<{ stripeConfigured: boolean; blobConfigured: boolean; databaseUrl: string } | null>(null);
+  const [adminInfo, setAdminInfo] = useState<{
+    email: string;
+    name: string;
+  } | null>(null);
+  const [storeConfig, setStoreConfig] = useState<{
+    stripeConfigured: boolean;
+    blobConfigured: boolean;
+    databaseUrl: string;
+  } | null>(null);
 
   useEffect(() => {
-    fetch('/api/admin/me').then(r => r.json()).then(d => { if (d.email) setAdminInfo(d); }).catch(() => {});
-    fetch('/api/admin/settings').then(r => r.json()).then(d => setStoreConfig(d)).catch(() => {});
+    fetch('/api/admin/me')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.email) setAdminInfo(d);
+      })
+      .catch(() => {});
+    fetch('/api/admin/settings')
+      .then((r) => r.json())
+      .then((d) => setStoreConfig(d))
+      .catch(() => {});
   }, []);
 
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault();
-    setError(''); setMessage('');
-    if (newPassword !== confirmPassword) { setError('New passwords do not match'); return; }
-    if (newPassword.length < 6) { setError('New password must be at least 6 characters'); return; }
+    setError('');
+    setMessage('');
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError('New password must be at least 6 characters');
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword, newPassword }) });
+      const res = await fetch('/api/admin/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
       const data = await res.json();
-      if (res.ok) { setMessage('Password changed successfully'); setCurrentPassword(''); setNewPassword(''); setConfirmPassword(''); }
-      else { setError(data.error || 'Failed to change password'); }
-    } catch { setError('Network error. Please try again.'); }
-    finally { setLoading(false); }
+      if (res.ok) {
+        setMessage('Password changed successfully');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setError(data.error || 'Failed to change password');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  if (checking || !authenticated) return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-gray-500">Loading...</p></div>;
+  if (checking || !authenticated)
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#0A0A0F' }}
+      >
+        <div className="shimmer w-32 h-4 rounded" />
+      </div>
+    );
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex" style={{ backgroundColor: '#0A0A0F' }}>
       <AdminSidebar />
       <main className="flex-1 p-4 sm:p-8 overflow-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Settings</h1>
-        <div className="max-w-2xl space-y-8">
+        <div className="flex items-center gap-3 mb-8">
+          <Settings className="w-6 h-6 text-indigo-400" aria-hidden="true" />
+          <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
+        </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Store Information</h2>
+        <div className="max-w-2xl space-y-6">
+          {/* Store Information */}
+          <div className="glass p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Store className="w-5 h-5 text-indigo-400" aria-hidden="true" />
+              <h2 className="font-semibold text-text-primary">
+                Store Information
+              </h2>
+            </div>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500">Store Name</span><span className="text-gray-900 font-medium">Digital Downloads Store</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Tagline</span><span className="text-gray-900 font-medium">Premium digital products</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Currency</span><span className="text-gray-900 font-medium">USD</span></div>
+              <div className="flex justify-between items-center py-2 border-b border-white/[0.05]">
+                <span className="text-text-secondary">Store Name</span>
+                <span className="text-text-primary font-medium">
+                  AI Armory
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/[0.05]">
+                <span className="text-text-secondary">Tagline</span>
+                <span className="text-text-primary font-medium">
+                  Premium digital products
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-text-secondary">Currency</span>
+                <span className="text-text-primary font-medium">USD</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Integrations</h2>
+          {/* Integrations */}
+          <div className="glass p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Database
+                className="w-5 h-5 text-indigo-400"
+                aria-hidden="true"
+              />
+              <h2 className="font-semibold text-text-primary">Integrations</h2>
+            </div>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-indigo-600">S</span>
-                  <div><p className="font-medium text-gray-900">Stripe Payments</p><p className="text-xs text-gray-500">Accept credit card payments</p></div>
+                  <div className="w-9 h-9 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                    <CreditCard
+                      className="w-5 h-5 text-violet-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-text-primary text-sm">
+                      Stripe Payments
+                    </p>
+                    <p className="text-xs text-text-secondary">
+                      Accept credit card payments
+                    </p>
+                  </div>
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${storeConfig?.stripeConfigured ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {storeConfig?.stripeConfigured ? 'Connected' : 'Not configured'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <ConnectionDot
+                    connected={storeConfig?.stripeConfigured ?? false}
+                  />
+                  <span
+                    className={`text-xs font-medium ${
+                      storeConfig?.stripeConfigured
+                        ? 'text-emerald-400'
+                        : 'text-red-400'
+                    }`}
+                  >
+                    {storeConfig?.stripeConfigured
+                      ? 'Connected'
+                      : 'Not configured'}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-blue-600">B</span>
-                  <div><p className="font-medium text-gray-900">Blob Storage</p><p className="text-xs text-gray-500">File uploads for products</p></div>
+                  <div className="w-9 h-9 rounded-lg bg-cyan-500/15 flex items-center justify-center">
+                    <HardDrive
+                      className="w-5 h-5 text-cyan-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-text-primary text-sm">
+                      Blob Storage
+                    </p>
+                    <p className="text-xs text-text-secondary">
+                      File uploads for products
+                    </p>
+                  </div>
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${storeConfig?.blobConfigured ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {storeConfig?.blobConfigured ? 'Connected' : 'Not configured'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <ConnectionDot
+                    connected={storeConfig?.blobConfigured ?? false}
+                  />
+                  <span
+                    className={`text-xs font-medium ${
+                      storeConfig?.blobConfigured
+                        ? 'text-emerald-400'
+                        : 'text-red-400'
+                    }`}
+                  >
+                    {storeConfig?.blobConfigured
+                      ? 'Connected'
+                      : 'Not configured'}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-green-600">D</span>
-                  <div><p className="font-medium text-gray-900">Database</p><p className="text-xs text-gray-500">Turso / libSQL</p></div>
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                    <Database
+                      className="w-5 h-5 text-emerald-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-text-primary text-sm">
+                      Database
+                    </p>
+                    <p className="text-xs text-text-secondary">
+                      Turso / libSQL
+                    </p>
+                  </div>
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${storeConfig?.databaseUrl === 'configured' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {storeConfig?.databaseUrl === 'configured' ? 'Connected' : 'Not configured'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <ConnectionDot
+                    connected={storeConfig?.databaseUrl === 'configured'}
+                  />
+                  <span
+                    className={`text-xs font-medium ${
+                      storeConfig?.databaseUrl === 'configured'
+                        ? 'text-emerald-400'
+                        : 'text-red-400'
+                    }`}
+                  >
+                    {storeConfig?.databaseUrl === 'configured'
+                      ? 'Connected'
+                      : 'Not configured'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Payment Methods</h2>
+          {/* Payment Methods */}
+          <div className="glass p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Wallet
+                className="w-5 h-5 text-indigo-400"
+                aria-hidden="true"
+              />
+              <h2 className="font-semibold text-text-primary">
+                Payment Methods
+              </h2>
+            </div>
             <div className="space-y-3">
               {[
-                { icon: 'CC', label: 'Credit / Debit Cards', detail: storeConfig?.stripeConfigured ? 'Enabled' : 'Disabled' },
-                { icon: 'AP', label: 'Apple Pay', detail: storeConfig?.stripeConfigured ? 'Via Stripe' : 'Disabled' },
-                { icon: 'GP', label: 'Google Pay', detail: storeConfig?.stripeConfigured ? 'Via Stripe' : 'Disabled' },
+                {
+                  Icon: CreditCard,
+                  label: 'Credit / Debit Cards',
+                  detail: storeConfig?.stripeConfigured
+                    ? 'Enabled'
+                    : 'Disabled',
+                  active: storeConfig?.stripeConfigured ?? false,
+                },
+                {
+                  Icon: Smartphone,
+                  label: 'Apple Pay',
+                  detail: storeConfig?.stripeConfigured
+                    ? 'Via Stripe'
+                    : 'Disabled',
+                  active: storeConfig?.stripeConfigured ?? false,
+                },
+                {
+                  Icon: Wallet,
+                  label: 'Google Pay',
+                  detail: storeConfig?.stripeConfigured
+                    ? 'Via Stripe'
+                    : 'Disabled',
+                  active: storeConfig?.stripeConfigured ?? false,
+                },
               ].map((pm) => (
-                <div key={pm.label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2"><span className="text-lg">{pm.icon}</span><span className="text-sm text-gray-900">{pm.label}</span></div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${storeConfig?.stripeConfigured ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{pm.detail}</span>
+                <div
+                  key={pm.label}
+                  className="flex items-center justify-between py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <pm.Icon
+                      className="w-4 h-4 text-text-secondary"
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm text-text-primary">
+                      {pm.label}
+                    </span>
+                  </div>
+                  <span
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                      pm.active
+                        ? 'bg-emerald-500/15 text-emerald-400'
+                        : 'bg-white/[0.08] text-text-secondary'
+                    }`}
+                  >
+                    {pm.detail}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
+          {/* Account Info */}
           {adminInfo && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Account Information</h2>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Email</span><span className="text-gray-900 font-medium">{adminInfo.email}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Name</span><span className="text-gray-900 font-medium">{adminInfo.name}</span></div>
+            <div className="glass p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <Lock
+                  className="w-5 h-5 text-indigo-400"
+                  aria-hidden="true"
+                />
+                <h2 className="font-semibold text-text-primary">
+                  Account Information
+                </h2>
+              </div>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between items-center py-2 border-b border-white/[0.05]">
+                  <span className="text-text-secondary">Email</span>
+                  <span className="text-text-primary font-medium">
+                    {adminInfo.email}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-text-secondary">Name</span>
+                  <span className="text-text-primary font-medium">
+                    {adminInfo.name}
+                  </span>
+                </div>
               </div>
             </div>
           )}
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Change Password</h2>
+          {/* Change Password */}
+          <div className="glass p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Lock
+                className="w-5 h-5 text-indigo-400"
+                aria-hidden="true"
+              />
+              <h2 className="font-semibold text-text-primary">
+                Change Password
+              </h2>
+            </div>
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                <input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" />
+                <label
+                  htmlFor="currentPassword"
+                  className="block text-sm font-medium text-text-secondary mb-1.5"
+                >
+                  Current Password
+                </label>
+                <input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
+                  className="glass-input w-full px-4 py-3 rounded-xl text-sm"
+                />
               </div>
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                <input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" />
+                <label
+                  htmlFor="newPassword"
+                  className="block text-sm font-medium text-text-secondary mb-1.5"
+                >
+                  New Password
+                </label>
+                <input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="glass-input w-full px-4 py-3 rounded-xl text-sm"
+                />
               </div>
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" />
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-text-secondary mb-1.5"
+                >
+                  Confirm New Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="glass-input w-full px-4 py-3 rounded-xl text-sm"
+                />
               </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              {message && <p className="text-green-600 text-sm">{message}</p>}
-              <button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50">{loading ? 'Changing...' : 'Change Password'}</button>
+              {error && (
+                <p className="text-red-400 text-sm">{error}</p>
+              )}
+              {message && (
+                <p className="text-emerald-400 text-sm">{message}</p>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-gradient px-6 py-3 rounded-xl font-medium text-sm disabled:opacity-50"
+              >
+                {loading ? 'Changing...' : 'Change Password'}
+              </button>
             </form>
           </div>
         </div>
