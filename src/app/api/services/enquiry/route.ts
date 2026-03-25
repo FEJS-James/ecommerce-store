@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email";
+import {
+  serviceEnquiryConfirmation,
+  serviceEnquiryNotification,
+} from "@/lib/email-templates";
 
 interface EnquiryBody {
   name: string;
@@ -19,7 +24,7 @@ export async function POST(request: NextRequest) {
     if (!name || !email || !message || !serviceName) {
       return NextResponse.json(
         { error: "Name, email, message, and service are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -28,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: "Invalid email address" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -44,15 +49,43 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
 
+    // Send confirmation to customer (best-effort)
+    sendEmail({
+      to: email,
+      subject: `We received your enquiry about ${serviceName}`,
+      html: serviceEnquiryConfirmation({
+        customerName: name,
+        serviceName,
+      }),
+    }).catch((err) =>
+      console.error("[Enquiry] Confirmation email failed:", err),
+    );
+
+    // Send internal notification to support (best-effort)
+    sendEmail({
+      to: "support@aiarmory.shop",
+      subject: `New service enquiry: ${serviceName} from ${name}`,
+      html: serviceEnquiryNotification({
+        customerName: name,
+        email,
+        company: body.company,
+        message,
+        serviceName,
+        contactMethod: body.contactMethod,
+      }),
+    }).catch((err) =>
+      console.error("[Enquiry] Notification email failed:", err),
+    );
+
     return NextResponse.json(
       { success: true, message: "Enquiry received" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch {
     console.error("[Service Enquiry] Error processing request");
     return NextResponse.json(
       { error: "Failed to process enquiry" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
