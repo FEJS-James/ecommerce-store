@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 
 interface EmailSignupProps {
   source?: string;
@@ -10,45 +10,57 @@ interface EmailSignupProps {
   compact?: boolean;
 }
 
-export default function EmailSignup({ source = 'website', leadMagnet, className = '', compact = false }: EmailSignupProps) {
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('');
+export default function EmailSignup({
+  source = "website",
+  leadMagnet,
+  className = "",
+  compact = false,
+}: EmailSignupProps) {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [message, setMessage] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus('loading');
+    setStatus("loading");
 
     try {
-      const res = await fetch('/api/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name, source, lead_magnet: leadMagnet }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        setStatus('success');
+        setStatus("success");
         setMessage(data.message || "You're in! Check your email.");
-        setEmail('');
-        setName('');
+        setEmail("");
+        setName("");
       } else {
-        setStatus('error');
-        setMessage(data.error || 'Something went wrong. Please try again.');
+        setStatus("error");
+        setMessage(data.error || "Something went wrong. Please try again.");
       }
     } catch {
-      setStatus('error');
-      setMessage('Network error. Please try again.');
+      setStatus("error");
+      setMessage("Network error. Please try again.");
     }
   }
 
-  if (status === 'success') {
+  if (status === "success") {
     return (
-      <div className={`glass rounded-xl p-6 text-center border border-emerald-500/20 ${className}`}>
+      <div
+        className={`glass rounded-xl p-6 text-center border border-emerald-500/20 ${className}`}
+      >
         <div className="flex items-center justify-center gap-2">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+          <CheckCircle2
+            className="w-5 h-5 text-emerald-400"
+            aria-hidden="true"
+          />
           <p className="text-emerald-300 font-medium text-lg">{message}</p>
         </div>
       </div>
@@ -68,13 +80,15 @@ export default function EmailSignup({ source = 'website', leadMagnet, className 
         />
         <button
           type="submit"
-          disabled={status === 'loading'}
+          disabled={status === "loading"}
           data-umami-event="newsletter_signup"
           className="btn-gradient px-6 py-2.5 rounded-lg font-medium text-sm disabled:opacity-50"
         >
-          {status === 'loading' ? '...' : 'Subscribe'}
+          {status === "loading" ? "..." : "Subscribe"}
         </button>
-        {status === 'error' && <p className="text-red-400 text-sm mt-1">{message}</p>}
+        {status === "error" && (
+          <p className="text-red-400 text-sm mt-1">{message}</p>
+        )}
       </form>
     );
   }
@@ -98,13 +112,13 @@ export default function EmailSignup({ source = 'website', leadMagnet, className 
       />
       <button
         type="submit"
-        disabled={status === 'loading'}
+        disabled={status === "loading"}
         data-umami-event="newsletter_signup"
         className="w-full btn-gradient px-6 py-3 rounded-xl font-medium disabled:opacity-50"
       >
-        {status === 'loading' ? 'Subscribing...' : 'Get Free Resources'}
+        {status === "loading" ? "Subscribing..." : "Get Free Resources"}
       </button>
-      {status === 'error' && <p className="text-red-400 text-sm">{message}</p>}
+      {status === "error" && <p className="text-red-400 text-sm">{message}</p>}
     </form>
   );
 }

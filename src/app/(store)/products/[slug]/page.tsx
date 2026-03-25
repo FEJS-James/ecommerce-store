@@ -4,6 +4,7 @@ import { queryOne, queryAll } from "@/lib/db";
 import { formatPrice, CATEGORIES, CATEGORY_FAQS } from "@/lib/utils";
 import ProductCard from "@/components/ProductCard";
 import GeoPrice from "@/components/GeoPrice";
+import TrackPageView from "@/components/TrackPageView";
 import PurchaseActions from "@/components/PurchaseActions";
 import CategoryIcon from "@/components/CategoryIcon";
 import ImageGallery from "@/components/ImageGallery";
