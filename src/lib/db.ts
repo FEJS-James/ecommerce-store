@@ -260,6 +260,24 @@ export async function initializeDb(): Promise<void> {
     }
   }
 
+  // Migration: create email_history table for tracking sent emails
+  try {
+    await db.execute({
+      sql: `CREATE TABLE IF NOT EXISTS email_history (
+        id TEXT PRIMARY KEY,
+        recipient TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'sent',
+        resend_id TEXT,
+        error TEXT,
+        sent_at TEXT DEFAULT (datetime('now'))
+      )`,
+      args: [],
+    });
+  } catch {
+    // Table may already exist
+  }
+
   // Check if products table is empty; if so, seed it
   const result = await db.execute({
     sql: "SELECT COUNT(*) as count FROM products",

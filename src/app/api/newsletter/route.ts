@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne, execute } from "@/lib/db";
+import { sendEmail } from "@/lib/email";
+import { newsletterWelcome } from "@/lib/email-templates";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -37,6 +39,16 @@ export async function POST(request: NextRequest) {
            WHERE id = ?`,
           [source, name, existing.id],
         );
+
+        // Send welcome email (best-effort)
+        sendEmail({
+          to: email,
+          subject: "Welcome back to AI Armory!",
+          html: newsletterWelcome({ email }),
+        }).catch((err) =>
+          console.error("[Newsletter] Welcome email failed:", err),
+        );
+
         return NextResponse.json({
           success: true,
           message: "Welcome back! You have been re-subscribed.",
@@ -54,6 +66,13 @@ export async function POST(request: NextRequest) {
        VALUES (?, ?, ?, ?, 'active')`,
       [id, email, name || null, source],
     );
+
+    // Send welcome email (best-effort)
+    sendEmail({
+      to: email,
+      subject: "Welcome to AI Armory!",
+      html: newsletterWelcome({ email }),
+    }).catch((err) => console.error("[Newsletter] Welcome email failed:", err));
 
     return NextResponse.json({
       success: true,
