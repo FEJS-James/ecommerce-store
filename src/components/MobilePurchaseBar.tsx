@@ -211,6 +211,17 @@ export default function MobilePurchaseBar({
               />
             </div>
 
+            <p className="text-xs text-zinc-600 text-center mb-3">
+              Instant download.{" "}
+              <a
+                href="/sales-terms"
+                className="text-indigo-400 hover:text-indigo-300 underline"
+              >
+                Sales Terms
+              </a>{" "}
+              apply.
+            </p>
+
             <button
               onClick={handleBuy}
               disabled={loading || !consentGiven}
