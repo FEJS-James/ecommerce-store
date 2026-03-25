@@ -27,7 +27,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
       }
     } else if (process.env.NODE_ENV === 'production') {
-      console.warn('[PayPal Webhook] PAYPAL_WEBHOOK_ID not set — skipping signature verification');
+      console.error('[PayPal Webhook] PAYPAL_WEBHOOK_ID not set in production — refusing to process unverified events');
+      return NextResponse.json(
+        { error: 'Webhook signature verification not configured' },
+        { status: 503 }
+      );
+    } else {
+      console.warn('[PayPal Webhook] PAYPAL_WEBHOOK_ID not set — skipping signature verification (development mode)');
     }
 
     await ensureDb();

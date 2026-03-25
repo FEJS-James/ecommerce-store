@@ -3,6 +3,7 @@ import { queryOne, queryAll } from '@/lib/db';
 import { formatPrice, CATEGORIES, CATEGORY_FAQS } from '@/lib/utils';
 import ProductCard from '@/components/ProductCard';
 import BuyButton from '@/components/BuyButton';
+import PayPalButton from '@/components/PayPalButton';
 import CategoryIcon from '@/components/CategoryIcon';
 import { Zap, Lock, ShieldCheck, Mail, FileText, HardDrive } from 'lucide-react';
 import type { Product } from '@/lib/types';
@@ -193,7 +194,7 @@ export default async function ProductPage({ params }: PageProps) {
           <div className="glass rounded-2xl p-6 sticky top-24">
             {category && (
               <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full mb-4" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#A5B4FC' }}>
-                <CategoryIcon name={category.iconName} className="w-3 h-3" aria-hidden="true" />
+                <CategoryIcon name={category.icon} className="w-3 h-3" aria-hidden="true" />
                 {category.label}
               </span>
             )}
@@ -224,6 +225,11 @@ export default async function ProductPage({ params }: PageProps) {
             <BuyButton
               productId={product.id}
               price={formatPrice(product.price_cents)}
+              className="mb-4"
+            />
+
+            <PayPalButton
+              productId={product.id}
               className="mb-6"
             />
 

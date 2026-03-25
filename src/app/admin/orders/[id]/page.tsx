@@ -163,9 +163,9 @@ export default function OrderDetailPage() {
                           : (order.payment_method || 'stripe') === 'crypto' ? 'bg-orange-100 text-orange-700'
                           : 'bg-purple-100 text-purple-700'
                       }`}>
-                        {(order.payment_method || 'stripe') === 'paypal' ? '💳 PayPal'
-                          : (order.payment_method || 'stripe') === 'crypto' ? '₿ Crypto'
-                          : '💳 Stripe'}
+                        {(order.payment_method || 'stripe') === 'paypal' ? 'PayPal'
+                          : (order.payment_method || 'stripe') === 'crypto' ? 'Crypto'
+                          : 'Stripe'}
                       </span>
                     </div>
                     {(order.payment_method || 'stripe') === 'stripe' && (
