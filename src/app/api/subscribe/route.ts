@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       if (existing.unsubscribed_at) {
         // Re-subscribe
         await execute(
-          "UPDATE email_subscribers SET unsubscribed_at = NULL, subscribed_at = datetime('now'), source = ?, lead_magnet = COALESCE(?, lead_magnet) WHERE id = ?",
+          "UPDATE email_subscribers SET unsubscribed_at = NULL, status = 'active', subscribed_at = datetime('now'), source = ?, lead_magnet = COALESCE(?, lead_magnet) WHERE id = ?",
           [source || 'website', lead_magnet || null, existing.id]
         );
         return NextResponse.json({ message: 'Welcome back! You\'ve been re-subscribed.' });
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     await execute(
-      'INSERT INTO email_subscribers (id, email, name, source, lead_magnet) VALUES (?, ?, ?, ?, ?)',
+      "INSERT INTO email_subscribers (id, email, name, source, lead_magnet, status) VALUES (?, ?, ?, ?, ?, 'active')",
       [uuidv4().replace(/-/g, ''), email, name || null, source || 'website', lead_magnet || null]
     );
 
