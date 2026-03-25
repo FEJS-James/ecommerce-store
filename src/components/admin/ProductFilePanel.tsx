@@ -218,6 +218,20 @@ export default function ProductFilePanel({
         onChange={handleInputChange}
         className="hidden"
       />
+
+      {/* Product PDF — always visible, generates from markdown description */}
+      <div className="mt-4 pt-4 border-t border-zinc-700/50">
+        <p className="text-xs text-zinc-500 mb-2">Branded PDF from product description</p>
+        <a
+          href={`/api/admin/products/${productId}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 transition-colors text-sm"
+        >
+          <FileText className="w-4 h-4" />
+          Generate PDF
+        </a>
+      </div>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import ProductForm from '@/components/ProductForm';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import type { Product } from '@/lib/types';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import ProductFilePanel from '@/components/admin/ProductFilePanel';
 
 export default function EditProductPage() {
@@ -83,9 +83,20 @@ export default function EditProductPage() {
           </div>
         ) : product ? (
           <>
-            <h1 className="text-2xl font-bold text-text-primary mb-6">
-              Edit: {product.name}
-            </h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-text-primary">
+                Edit: {product.name}
+              </h1>
+              <a
+                href={`/api/admin/products/${id}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 transition-colors text-sm"
+              >
+                <FileText className="w-4 h-4" />
+                Preview PDF
+              </a>
+            </div>
             <ProductForm product={product} stats={stats} />
             <div className="mt-8">
               <h2 className="text-lg font-semibold text-white mb-4">Product File</h2>
