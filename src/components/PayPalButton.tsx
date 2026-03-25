@@ -74,82 +74,88 @@ export default function PayPalButton({
     if (!window.paypal || !containerRef.current || renderedRef.current) return;
     renderedRef.current = true;
 
-    window.paypal
-      .Buttons({
-        style: {
-          layout: "horizontal",
-          color: "gold",
-          shape: "rect",
-          label: "paypal",
-          height: "55",
-          tagline: "false",
-        },
-        createOrder: async () => {
-          setError("");
-          const res = await fetch("/api/paypal/create-order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ productId }),
-          });
-
-          const data = await res.json();
-
-          if (!res.ok || !data.orderID) {
-            if (data.error === "paypal_not_configured") {
-              throw new Error("PayPal payments coming soon!");
-            }
-            throw new Error(data.error || "Failed to create PayPal order");
-          }
-
-          return data.orderID;
-        },
-        onApprove: async (data: { orderID: string }) => {
-          setCapturing(true);
-          setError("");
-
-          try {
-            const res = await fetch("/api/paypal/capture-order", {
+    try {
+      window.paypal
+        .Buttons({
+          style: {
+            layout: "horizontal",
+            color: "gold",
+            shape: "rect",
+            label: "paypal",
+            height: "55",
+            tagline: "false",
+          },
+          createOrder: async () => {
+            setError("");
+            const res = await fetch("/api/paypal/create-order", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                orderID: data.orderID,
-                productId,
-              }),
+              body: JSON.stringify({ productId }),
             });
 
-            const captureData = await res.json();
+            const data = await res.json();
 
-            if (!res.ok || !captureData.success) {
-              throw new Error(captureData.error || "Payment capture failed");
+            if (!res.ok || !data.orderID) {
+              if (data.error === "paypal_not_configured") {
+                throw new Error("PayPal payments coming soon!");
+              }
+              throw new Error(data.error || "Failed to create PayPal order");
             }
 
-            // Redirect to success page with the internal order ID and verification token
-            const tokenParam = captureData.token
-              ? `&token=${captureData.token}`
-              : "";
-            window.location.href = `/order/success?order_id=${captureData.orderId}${tokenParam}`;
-          } catch (err) {
+            return data.orderID;
+          },
+          onApprove: async (data: { orderID: string }) => {
+            setCapturing(true);
+            setError("");
+
+            try {
+              const res = await fetch("/api/paypal/capture-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  orderID: data.orderID,
+                  productId,
+                }),
+              });
+
+              const captureData = await res.json();
+
+              if (!res.ok || !captureData.success) {
+                throw new Error(captureData.error || "Payment capture failed");
+              }
+
+              // Redirect to success page with the internal order ID and verification token
+              const tokenParam = captureData.token
+                ? `&token=${captureData.token}`
+                : "";
+              window.location.href = `/order/success?order_id=${captureData.orderId}${tokenParam}`;
+            } catch (err) {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : "Payment failed. Please try again.",
+              );
+              setCapturing(false);
+            }
+          },
+          onError: (err: unknown) => {
+            console.error("PayPal error:", err);
             setError(
               err instanceof Error
                 ? err.message
-                : "Payment failed. Please try again.",
+                : "Something went wrong with PayPal.",
             );
-            setCapturing(false);
-          }
-        },
-        onError: (err: unknown) => {
-          console.error("PayPal error:", err);
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Something went wrong with PayPal.",
-          );
-        },
-        onCancel: () => {
-          // User closed the PayPal popup — no action needed
-        },
-      })
-      .render(containerRef.current!);
+          },
+          onCancel: () => {
+            // User closed the PayPal popup — no action needed
+          },
+        })
+        .render(containerRef.current!);
+    } catch (err) {
+      console.error("PayPal Buttons render failed:", err);
+      renderedRef.current = false;
+      setError("PayPal is temporarily unavailable. Please use another payment method.");
+    }
   }, [productId]);
 
   useEffect(() => {
