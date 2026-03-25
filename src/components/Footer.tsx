@@ -8,7 +8,7 @@ export default function Footer() {
       style={{ background: "#07070B" }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="md:col-span-2">
             <Link
@@ -66,7 +66,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Support & Legal Links */}
+          {/* Support */}
           <div>
             <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
               Support
@@ -74,31 +74,42 @@ export default function Footer() {
             <ul className="space-y-2.5">
               <li>
                 <Link
-                  href="/free"
+                  href="/support#faq"
                   className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
                 >
-                  Free Downloads
+                  FAQ
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/products"
+                  href="/support#contact"
                   className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
                 >
-                  All Products
+                  Contact
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/account"
+                  href="/support#request"
                   className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
                 >
-                  My Account
+                  Submit Request
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
+                >
+                  About
                 </Link>
               </li>
             </ul>
+          </div>
 
-            <h3 className="text-white font-semibold mb-4 mt-6 text-sm uppercase tracking-wider">
+          {/* Legal */}
+          <div>
+            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
               Legal
             </h3>
             <ul className="space-y-2.5">

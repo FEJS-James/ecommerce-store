@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { Shield, Menu, X, User } from 'lucide-react';
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { Shield, Menu, X, User, HelpCircle } from "lucide-react";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -15,12 +15,12 @@ export default function Header() {
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [mobileMenuOpen]);
 
@@ -28,20 +28,42 @@ export default function Header() {
     <header className="glass !rounded-none !border-x-0 !border-t-0 !bg-[rgba(10,10,15,0.8)] sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2.5 font-bold text-xl text-white group">
-            <Shield className="w-6 h-6 text-indigo-400 group-hover:text-indigo-300 transition-colors" aria-hidden="true" />
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 font-bold text-xl text-white group"
+          >
+            <Shield
+              className="w-6 h-6 text-indigo-400 group-hover:text-indigo-300 transition-colors"
+              aria-hidden="true"
+            />
             <span>AI Armory</span>
           </Link>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/products" className="text-zinc-400 hover:text-white transition-colors text-sm font-medium">
+            <Link
+              href="/products"
+              className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
+            >
               Products
             </Link>
-            <Link href="/free" className="text-zinc-400 hover:text-white transition-colors text-sm font-medium">
+            <Link
+              href="/free"
+              className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
+            >
               Free Downloads
             </Link>
-            <Link href="/account" className="text-zinc-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1.5">
+            <Link
+              href="/support"
+              className="text-zinc-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1.5"
+            >
+              <HelpCircle className="w-4 h-4" aria-hidden="true" />
+              Support
+            </Link>
+            <Link
+              href="/account"
+              className="text-zinc-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1.5"
+            >
               <User className="w-4 h-4" aria-hidden="true" />
               Account
             </Link>
@@ -58,7 +80,7 @@ export default function Header() {
             <button
               className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors focus-glow"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-nav-panel"
             >
@@ -92,7 +114,10 @@ export default function Header() {
           >
             <div className="flex items-center justify-between mb-8">
               <span className="font-bold text-lg text-white flex items-center gap-2">
-                <Shield className="w-5 h-5 text-indigo-400" aria-hidden="true" />
+                <Shield
+                  className="w-5 h-5 text-indigo-400"
+                  aria-hidden="true"
+                />
                 AI Armory
               </span>
               <button
@@ -118,6 +143,14 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Free Downloads
+              </Link>
+              <Link
+                href="/support"
+                className="text-zinc-300 hover:text-white px-4 py-3 rounded-lg hover:bg-white/[0.05] transition-colors font-medium flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <HelpCircle className="w-4 h-4" aria-hidden="true" />
+                Support
               </Link>
               <Link
                 href="/account"

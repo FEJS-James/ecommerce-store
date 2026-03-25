@@ -427,6 +427,17 @@ export default async function ProductPage({ params }: PageProps) {
                 isDigitalProduct={true}
               />
 
+              <p className="text-xs text-zinc-600 text-center mb-4">
+                Instant download.{" "}
+                <a
+                  href="/sales-terms"
+                  className="text-indigo-400 hover:text-indigo-300 underline"
+                >
+                  Sales Terms
+                </a>{" "}
+                apply.
+              </p>
+
               <div className="space-y-3 text-sm text-zinc-500 mb-6">
                 <div className="flex items-center gap-2.5">
                   <Zap
