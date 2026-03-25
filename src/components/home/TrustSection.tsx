@@ -1,60 +1,56 @@
 "use client";
 
-import { Shield, Server, Layers, Target } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 
 const pillars = [
   {
-    icon: Shield,
     title: "Built by Operators, Not Theorists",
     description:
       "Every product comes from real-world deployment. We build and run AI automation ourselves before we sell it to you.",
-    accentColor: "#6366F1",
-    gradientFrom: "rgba(99, 102, 241, 0.15)",
-    gradientTo: "rgba(99, 102, 241, 0.02)",
+    accent: "#6366F1",
+    // Shield icon SVG path
+    iconPath:
+      "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
   },
   {
-    icon: Server,
     title: "Deploy on YOUR Machine",
     description:
       "No vendor lock-in, no monthly SaaS fees. Our agents and automations run locally or on your own infrastructure.",
-    accentColor: "#8B5CF6",
-    gradientFrom: "rgba(139, 92, 246, 0.15)",
-    gradientTo: "rgba(139, 92, 246, 0.02)",
+    accent: "#8B5CF6",
+    // Server icon SVG path
+    iconPath:
+      "M2 9h20M2 15h20M4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2zM8 12h.01M8 18h.01",
   },
   {
-    icon: Layers,
-    title: "From $19 Products to $1,999 Done-For-You",
+    title: "From £19 Products to £1,999 Done-For-You",
     description:
       "Whether you want a DIY blueprint or a full enterprise rollout, we have the right option for your budget and timeline.",
-    accentColor: "#06B6D4",
-    gradientFrom: "rgba(6, 182, 212, 0.15)",
-    gradientTo: "rgba(6, 182, 212, 0.02)",
+    accent: "#06B6D4",
+    // Layers icon SVG path
+    iconPath:
+      "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
   },
   {
-    icon: Target,
     title: "Real Results, Not Hype",
     description:
       "No inflated promises. No fake screenshots. Just clear documentation, proven workflows, and measurable outcomes.",
-    accentColor: "#10B981",
-    gradientFrom: "rgba(16, 185, 129, 0.15)",
-    gradientTo: "rgba(16, 185, 129, 0.02)",
+    accent: "#F59E0B",
+    // Target icon SVG path
+    iconPath:
+      "M12 12m-10 0a10 10 0 1020 0 10 10 0 10-20 0M12 12m-6 0a6 6 0 1012 0 6 6 0 10-12 0M12 12m-2 0a2 2 0 104 0 2 2 0 10-4 0",
   },
 ];
 
 export default function TrustSection() {
   return (
-    <section className="py-20 md:py-28 relative overflow-hidden">
-      {/* Unique background: diagonal gradient */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(139,92,246,0.04) 0%, transparent 50%, rgba(6,182,212,0.03) 100%)",
-        }}
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <section
+      className="py-20 md:py-28 relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(139, 92, 246, 0.03), transparent)",
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -66,68 +62,65 @@ export default function TrustSection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {pillars.map((pillar, i) => (
             <ScrollReveal key={pillar.title} delay={i * 120}>
               <div
-                className="group relative rounded-2xl p-8 h-full overflow-hidden transition-all duration-300"
+                className="group relative p-8 rounded-2xl overflow-hidden h-full transition-all duration-300 hover:-translate-y-1"
                 style={{
-                  background: "rgba(255, 255, 255, 0.02)",
+                  background: "rgba(255, 255, 255, 0.03)",
                   backdropFilter: "blur(20px)",
                   WebkitBackdropFilter: "blur(20px)",
-                  border: `1px solid rgba(255,255,255,0.06)`,
+                  border: `1px solid ${pillar.accent}20`,
                 }}
                 onMouseEnter={(e) => {
-                  const el = e.currentTarget;
-                  el.style.borderColor = `${pillar.accentColor}40`;
-                  el.style.transform = "translateY(-4px)";
-                  el.style.boxShadow = `0 0 40px ${pillar.accentColor}15, 0 8px 32px rgba(0,0,0,0.3)`;
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.borderColor = `${pillar.accent}40`;
+                  el.style.boxShadow = `0 0 40px ${pillar.accent}10, 0 8px 32px rgba(0,0,0,0.3)`;
                 }}
                 onMouseLeave={(e) => {
-                  const el = e.currentTarget;
-                  el.style.borderColor = "rgba(255,255,255,0.06)";
-                  el.style.transform = "translateY(0)";
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.borderColor = `${pillar.accent}20`;
                   el.style.boxShadow = "none";
                 }}
               >
-                {/* Unique gradient accent per card */}
+                {/* Unique gradient accent glow per card */}
                 <div
-                  className="absolute top-0 left-0 right-0 h-[2px]"
-                  style={{
-                    background: `linear-gradient(90deg, transparent, ${pillar.accentColor}, transparent)`,
-                    opacity: 0.5,
-                  }}
+                  className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-[0.07] pointer-events-none transition-opacity duration-300 group-hover:opacity-[0.12]"
+                  style={{ background: pillar.accent }}
                 />
 
-                {/* Corner glow */}
+                {/* SVG icon with line-draw animation */}
                 <div
-                  className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl transition-opacity duration-300 opacity-0 group-hover:opacity-100"
-                  style={{ background: pillar.gradientFrom }}
-                />
-
-                <div className="relative">
-                  {/* Icon with unique glow */}
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+                  className="w-14 h-14 rounded-xl flex items-center justify-center mb-5"
+                  style={{ background: `${pillar.accent}12` }}
+                >
+                  <svg
+                    className="w-7 h-7"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={pillar.accent}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
                     style={{
-                      background: `linear-gradient(135deg, ${pillar.gradientFrom}, ${pillar.gradientTo})`,
-                      border: `1px solid ${pillar.accentColor}25`,
+                      strokeDasharray: 100,
+                      strokeDashoffset: 100,
+                      animation: "lineDraw 1.5s ease-out forwards",
+                      animationDelay: `${0.3 + i * 0.2}s`,
                     }}
                   >
-                    <pillar.icon
-                      className="w-7 h-7"
-                      style={{ color: pillar.accentColor }}
-                      aria-hidden="true"
-                    />
-                  </div>
-
-                  <h3 className="text-xl font-semibold text-white mb-3">
-                    {pillar.title}
-                  </h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    {pillar.description}
-                  </p>
+                    <path d={pillar.iconPath} />
+                  </svg>
                 </div>
+
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  {pillar.title}
+                </h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  {pillar.description}
+                </p>
               </div>
             </ScrollReveal>
           ))}
