@@ -13,7 +13,7 @@ declare global {
   interface Window {
     paypal?: {
       Buttons: (config: {
-        style?: Record<string, string>;
+        style?: Record<string, string | number | boolean>;
         createOrder: () => Promise<string>;
         onApprove: (data: { orderID: string }) => Promise<void>;
         onError?: (err: unknown) => void;
@@ -124,12 +124,12 @@ export default function PayPalButton({
       window.paypal
         .Buttons({
           style: {
-            layout: "horizontal",
+            layout: "vertical",
             color: "gold",
             shape: "rect",
             label: "paypal",
-            height: "55",
-            tagline: "false",
+            height: 55,
+            tagline: false,
           },
           createOrder: async () => {
             setError("");

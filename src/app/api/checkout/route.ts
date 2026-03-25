@@ -47,7 +47,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Convert price to target currency (full price before any PPP discount)
-    const convertedCents = convertCents(product.price_cents, currency);
+    // Coerce to number — SQLite may return strings for INTEGER columns
+    const priceCents = Number(product.price_cents);
+    const convertedCents = convertCents(priceCents, currency);
 
     // Build line items with the correct currency at full price
     // PPP discount is applied via Stripe coupon
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
         product_id: product.id,
         product_slug: product.slug,
         pricing_tier: String(tier),
-        original_price_usd_cents: String(product.price_cents),
+        original_price_usd_cents: String(priceCents),
         charged_currency: currency,
         discount_pct: tier === 2 ? "30" : tier === 3 ? "50" : "0",
       },

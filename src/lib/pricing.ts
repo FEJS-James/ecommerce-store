@@ -122,7 +122,7 @@ export function convertCents(
   currency: SupportedCurrency,
 ): number {
   const rate = CURRENCY_RATES[currency];
-  return Math.round(usdCents * rate);
+  return Math.round(Number(usdCents) * rate);
 }
 
 /**
@@ -136,7 +136,7 @@ export function formatPriceWithCurrency(
   return new Intl.NumberFormat(config.locale, {
     style: "currency",
     currency: config.code,
-  }).format(cents / 100);
+  }).format(Number(cents) / 100);
 }
 
 /**
@@ -144,13 +144,14 @@ export function formatPriceWithCurrency(
  * For Tier 2: 30% off. For Tier 3: 50% off. Tier 1: no discount.
  */
 export function getDiscountedPrice(cents: number, tier: PricingTier): number {
+  const safeCents = Number(cents);
   switch (tier) {
     case 2:
-      return Math.round(cents * 0.7);
+      return Math.round(safeCents * 0.7);
     case 3:
-      return Math.round(cents * 0.5);
+      return Math.round(safeCents * 0.5);
     default:
-      return cents;
+      return safeCents;
   }
 }
 
