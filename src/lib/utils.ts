@@ -5,16 +5,26 @@ export function formatPrice(cents: number): string {
   }).format(cents / 100);
 }
 
-export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+/**
+ * Safely convert a date value (Date, number, or string) to a Date object.
+ */
+export function safeDate(value: Date | number | string | null | undefined): Date {
+  if (!value) return new Date(0);
+  if (value instanceof Date) return value;
+  if (typeof value === 'number') return new Date(value);
+  return new Date(String(value));
+}
+
+export function formatDate(dateStr: Date | number | string): string {
+  return safeDate(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
 }
 
-export function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+export function formatDateTime(dateStr: Date | number | string): string {
+  return safeDate(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -30,35 +40,35 @@ export function slugify(text: string): string {
     .replace(/(^-|-$)+/g, '');
 }
 
-export const CATEGORIES: Record<string, { label: string; icon: string; description: string }> = {
+export const CATEGORIES: Record<string, { label: string; iconName: string; description: string }> = {
   'finance-templates': {
     label: 'Finance Templates',
-    icon: '💰',
+    iconName: 'TrendingUp',
     description: 'Spreadsheets and tools to manage your money',
   },
   'prompt-packs': {
     label: 'AI Prompt Packs',
-    icon: '🤖',
+    iconName: 'BrainCircuit',
     description: 'Battle-tested prompts for every AI platform',
   },
   'notion-templates': {
     label: 'Notion Templates',
-    icon: '📝',
+    iconName: 'LayoutGrid',
     description: 'Ready-to-use Notion workspaces and systems',
   },
   'smart-home-guides': {
     label: 'Smart Home Guides',
-    icon: '🏠',
+    iconName: 'Home',
     description: 'Step-by-step guides to automate your home',
   },
   'dev-templates': {
     label: 'Developer Templates',
-    icon: '💻',
+    iconName: 'Code2',
     description: 'Production-ready code templates and starters',
   },
   'printables': {
     label: 'Printables',
-    icon: '🖨️',
+    iconName: 'Printer',
     description: 'Beautiful printable planners and worksheets',
   },
 };

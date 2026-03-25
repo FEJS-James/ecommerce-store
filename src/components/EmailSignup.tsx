@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 
 interface EmailSignupProps {
   source?: string;
@@ -30,7 +31,7 @@ export default function EmailSignup({ source = 'website', leadMagnet, className 
 
       if (res.ok) {
         setStatus('success');
-        setMessage(data.message || 'You\'re in! Check your email.');
+        setMessage(data.message || "You're in! Check your email.");
         setEmail('');
         setName('');
       } else {
@@ -45,8 +46,11 @@ export default function EmailSignup({ source = 'website', leadMagnet, className 
 
   if (status === 'success') {
     return (
-      <div className={`bg-green-50 border border-green-200 rounded-xl p-6 text-center ${className}`}>
-        <p className="text-green-800 font-medium text-lg">🎉 {message}</p>
+      <div className={`glass rounded-xl p-6 text-center border border-emerald-500/20 ${className}`}>
+        <div className="flex items-center justify-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+          <p className="text-emerald-300 font-medium text-lg">{message}</p>
+        </div>
       </div>
     );
   }
@@ -60,16 +64,16 @@ export default function EmailSignup({ source = 'website', leadMagnet, className 
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           required
-          className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+          className="flex-1 px-4 py-2.5 rounded-lg glass-input text-sm focus-glow"
         />
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+          className="btn-gradient px-6 py-2.5 rounded-lg font-medium text-sm disabled:opacity-50"
         >
           {status === 'loading' ? '...' : 'Subscribe'}
         </button>
-        {status === 'error' && <p className="text-red-500 text-sm mt-1">{message}</p>}
+        {status === 'error' && <p className="text-red-400 text-sm mt-1">{message}</p>}
       </form>
     );
   }
@@ -81,7 +85,7 @@ export default function EmailSignup({ source = 'website', leadMagnet, className 
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Your name (optional)"
-        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+        className="w-full px-4 py-3 rounded-xl glass-input"
       />
       <input
         type="email"
@@ -89,16 +93,16 @@ export default function EmailSignup({ source = 'website', leadMagnet, className 
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Your email address"
         required
-        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+        className="w-full px-4 py-3 rounded-xl glass-input"
       />
       <button
         type="submit"
         disabled={status === 'loading'}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+        className="w-full btn-gradient px-6 py-3 rounded-xl font-medium disabled:opacity-50"
       >
-        {status === 'loading' ? 'Subscribing...' : 'Get Free Resources →'}
+        {status === 'loading' ? 'Subscribing...' : 'Get Free Resources'}
       </button>
-      {status === 'error' && <p className="text-red-500 text-sm">{message}</p>}
+      {status === 'error' && <p className="text-red-400 text-sm">{message}</p>}
     </form>
   );
 }

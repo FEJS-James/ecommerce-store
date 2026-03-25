@@ -98,10 +98,10 @@ export default async function AdminDashboardPage() {
         {/* Revenue Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { label: 'Today', value: todayRevenue, icon: '💰' },
-            { label: 'This Week', value: weekRevenue, icon: '📈' },
-            { label: 'This Month', value: monthRevenue, icon: '📊' },
-            { label: 'All Time', value: allTimeRevenue, icon: '🏆' },
+            { label: 'Today', value: todayRevenue, icon: 'TD' },
+            { label: 'This Week', value: weekRevenue, icon: 'WK' },
+            { label: 'This Month', value: monthRevenue, icon: 'MO' },
+            { label: 'All Time', value: allTimeRevenue, icon: 'AT' },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-2">
@@ -202,9 +202,9 @@ export default async function AdminDashboardPage() {
                 const label = method.payment_method === 'paypal' ? 'PayPal'
                   : method.payment_method === 'crypto' ? 'Crypto'
                   : 'Stripe';
-                const icon = method.payment_method === 'paypal' ? '💳'
+                const icon = method.payment_method === 'paypal' ? 'PP'
                   : method.payment_method === 'crypto' ? '₿'
-                  : '💳';
+                  : 'CC';
                 const bgColor = method.payment_method === 'paypal' ? 'bg-blue-50 border-blue-200'
                   : method.payment_method === 'crypto' ? 'bg-orange-50 border-orange-200'
                   : 'bg-purple-50 border-purple-200';

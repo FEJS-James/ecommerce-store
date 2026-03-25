@@ -39,7 +39,7 @@ export default function AdminSubscribersPage() {
             onClick={handleExportCSV}
             className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors text-sm"
           >
-            📥 Export CSV
+            Export CSV
           </button>
         </div>
 

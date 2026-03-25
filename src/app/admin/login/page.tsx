@@ -111,7 +111,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <span className="text-4xl block mb-3">{setupMode ? '🔧' : '⚡'}</span>
+          <span className="text-2xl font-bold block mb-3">{setupMode ? 'Setup' : 'Login'}</span>
           <h1 className="text-2xl font-bold text-gray-900">
             {setupMode ? 'Admin Setup' : 'Admin Login'}
           </h1>
