@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Shield } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -22,9 +23,7 @@ export default function AdminLoginPage() {
           setSetupMode(true);
         }
       })
-      .catch(() => {
-        // If check fails, default to login mode
-      })
+      .catch(() => {})
       .finally(() => setChecking(false));
   }, []);
 
@@ -70,7 +69,6 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // Admin created — now log in automatically
         const loginRes = await fetch('/api/admin/auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -81,12 +79,10 @@ export default function AdminLoginPage() {
           router.push('/admin');
           router.refresh();
         } else {
-          // Account created but auto-login failed — switch to login mode
           setSetupMode(false);
           setError('Account created! Please sign in.');
         }
       } else if (res.status === 403) {
-        // Another admin was created in the meantime
         setSetupMode(false);
         setError('Setup already completed. Please sign in.');
       } else {
@@ -101,31 +97,45 @@ export default function AdminLoginPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-gray-400">Loading...</div>
+      <div
+        className="min-h-screen flex items-center justify-center gradient-mesh"
+        style={{ backgroundColor: '#0A0A0F' }}
+      >
+        <div className="shimmer w-32 h-4 rounded" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
+    <div
+      className="min-h-screen flex items-center justify-center gradient-mesh p-4"
+      style={{ backgroundColor: '#0A0A0F' }}
+    >
+      <div className="glass p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <span className="text-2xl font-bold block mb-3">{setupMode ? 'Setup' : 'Login'}</span>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-7 h-7 text-white" aria-hidden="true" />
+          </div>
+          <h1 className="text-2xl font-bold text-text-primary">
             {setupMode ? 'Admin Setup' : 'Admin Login'}
           </h1>
-          <p className="text-gray-500 mt-2">
+          <p className="text-text-secondary mt-2 text-sm">
             {setupMode
               ? 'Create your admin account to get started'
               : 'Sign in to your admin account'}
           </p>
         </div>
 
-        <form onSubmit={setupMode ? handleSetup : handleLogin} className="space-y-4">
+        <form
+          onSubmit={setupMode ? handleSetup : handleLogin}
+          className="space-y-4"
+        >
           {setupMode && (
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-text-secondary mb-1.5"
+              >
                 Name
               </label>
               <input
@@ -134,13 +144,16 @@ export default function AdminLoginPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                className="glass-input w-full px-4 py-3 rounded-xl text-sm"
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-text-secondary mb-1.5"
+            >
               Email
             </label>
             <input
@@ -148,15 +161,20 @@ export default function AdminLoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={setupMode ? 'your@email.com' : 'admin@store.local'}
+              placeholder={
+                setupMode ? 'your@email.com' : 'admin@store.local'
+              }
               required
               autoFocus
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+              className="glass-input w-full px-4 py-3 rounded-xl text-sm"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-text-secondary mb-1.5"
+            >
               Password
             </label>
             <input
@@ -164,10 +182,12 @@ export default function AdminLoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={setupMode ? 'Min 8 characters' : 'Enter your password'}
+              placeholder={
+                setupMode ? 'Min 8 characters' : 'Enter your password'
+              }
               required
               minLength={setupMode ? 8 : undefined}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+              className="glass-input w-full px-4 py-3 rounded-xl text-sm"
             />
           </div>
 
@@ -178,26 +198,31 @@ export default function AdminLoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                className="h-4 w-4 rounded border-white/20 bg-white/[0.05]"
               />
-              <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-600">
+              <label
+                htmlFor="rememberMe"
+                className="ml-2 text-sm text-text-secondary"
+              >
                 Remember me for 30 days
               </label>
             </div>
           )}
 
-          {error && (
-            <p className="text-red-500 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="btn-gradient w-full px-6 py-3 rounded-xl font-medium text-sm disabled:opacity-50"
           >
             {loading
-              ? (setupMode ? 'Creating account...' : 'Signing in...')
-              : (setupMode ? 'Create Admin Account' : 'Sign In')}
+              ? setupMode
+                ? 'Creating account...'
+                : 'Signing in...'
+              : setupMode
+                ? 'Create Admin Account'
+                : 'Sign In'}
           </button>
         </form>
       </div>

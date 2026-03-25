@@ -5,7 +5,14 @@ import Link from 'next/link';
 import AdminSidebar from '@/components/AdminSidebar';
 import { formatPrice, formatDateTime } from '@/lib/utils';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { CreditCard, Coins } from 'lucide-react';
+import {
+  CreditCard,
+  Coins,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+} from 'lucide-react';
 
 interface OrderRow {
   id: string;
@@ -19,14 +26,46 @@ interface OrderRow {
 }
 
 function PaymentMethodBadge({ method }: { method: string }) {
-  switch (method) {
-    case 'paypal':
-      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium"><CreditCard className="w-3 h-3" /> PayPal</span>;
-    case 'crypto':
-      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium"><Coins className="w-3 h-3" /> Crypto</span>;
-    default:
-      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium"><CreditCard className="w-3 h-3" /> Stripe</span>;
-  }
+  const config: Record<string, { label: string; Icon: typeof CreditCard; classes: string }> = {
+    paypal: {
+      label: 'PayPal',
+      Icon: CreditCard,
+      classes: 'bg-blue-500/15 text-blue-400',
+    },
+    crypto: {
+      label: 'Crypto',
+      Icon: Coins,
+      classes: 'bg-orange-500/15 text-orange-400',
+    },
+    stripe: {
+      label: 'Stripe',
+      Icon: CreditCard,
+      classes: 'bg-violet-500/15 text-violet-400',
+    },
+  };
+  const c = config[method] || config.stripe;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${c.classes}`}
+    >
+      <c.Icon className="w-3 h-3" aria-hidden="true" />
+      {c.label}
+    </span>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const classes =
+    status === 'completed'
+      ? 'bg-emerald-500/15 text-emerald-400'
+      : status === 'refunded'
+        ? 'bg-red-500/15 text-red-400'
+        : 'bg-white/[0.08] text-text-secondary';
+  return (
+    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${classes}`}>
+      {status}
+    </span>
+  );
 }
 
 export default function AdminOrdersPage() {
@@ -39,6 +78,7 @@ export default function AdminOrdersPage() {
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
@@ -59,99 +99,282 @@ export default function AdminOrdersPage() {
     setLoading(false);
   }, [startDate, endDate, statusFilter, paymentMethodFilter, debouncedSearch]);
 
-  useEffect(() => { loadOrders(); }, [loadOrders]);
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   if (checking || !authenticated) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-gray-500">Loading...</p></div>;
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#0A0A0F' }}
+      >
+        <div className="shimmer w-32 h-4 rounded" />
+      </div>
+    );
   }
 
-  const hasFilters = startDate || endDate || statusFilter || paymentMethodFilter || searchQuery;
+  const hasFilters =
+    startDate || endDate || statusFilter || paymentMethodFilter || searchQuery;
+
+  const statusFilters = [
+    { value: '', label: 'All' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'refunded', label: 'Refunded' },
+    { value: 'pending', label: 'Pending' },
+  ];
+
+  const paymentFilters = [
+    { value: '', label: 'All Payments' },
+    { value: 'stripe', label: 'Stripe' },
+    { value: 'paypal', label: 'PayPal' },
+    { value: 'crypto', label: 'Crypto' },
+  ];
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex" style={{ backgroundColor: '#0A0A0F' }}>
       <AdminSidebar />
       <main className="flex-1 p-4 sm:p-8 overflow-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
+        <h1 className="text-2xl font-bold text-text-primary mb-6">Orders</h1>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">All</option>
-                <option value="completed">Completed</option>
-                <option value="refunded">Refunded</option>
-                <option value="pending">Pending</option>
-              </select>
+        {/* Filters */}
+        <div className="glass p-4 mb-6">
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex-1 min-w-[200px] relative">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none"
+                aria-hidden="true"
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by email..."
+                className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm"
+              />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Payment</label>
-              <select value={paymentMethodFilter} onChange={(e) => setPaymentMethodFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">All</option>
-                <option value="stripe">Stripe</option>
-                <option value="paypal">PayPal</option>
-                <option value="crypto">Crypto</option>
-              </select>
+            <div className="flex gap-2 flex-wrap">
+              {statusFilters.map((sf) => (
+                <button
+                  key={sf.value}
+                  onClick={() => setStatusFilter(sf.value)}
+                  className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                    statusFilter === sf.value
+                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                      : 'bg-white/[0.05] text-text-secondary border border-white/[0.08] hover:bg-white/[0.08]'
+                  }`}
+                >
+                  {sf.label}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <div className="flex gap-2 flex-wrap">
+              {paymentFilters.map((pf) => (
+                <button
+                  key={pf.value}
+                  onClick={() => setPaymentMethodFilter(pf.value)}
+                  className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                    paymentMethodFilter === pf.value
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      : 'bg-white/[0.05] text-text-secondary border border-white/[0.08] hover:bg-white/[0.08]'
+                  }`}
+                >
+                  {pf.label}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">End Date</label>
-              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-medium text-gray-500 mb-1">Search by email</label>
-              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="customer@email.com" className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="glass-input px-3 py-2.5 rounded-xl text-sm"
+                aria-label="Start date"
+              />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="glass-input px-3 py-2.5 rounded-xl text-sm"
+                aria-label="End date"
+              />
             </div>
             {hasFilters && (
-              <button onClick={() => { setStartDate(''); setEndDate(''); setStatusFilter(''); setPaymentMethodFilter(''); setSearchQuery(''); }} className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2">Clear filters</button>
+              <button
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                  setStatusFilter('');
+                  setPaymentMethodFilter('');
+                  setSearchQuery('');
+                }}
+                className="text-sm text-text-secondary hover:text-text-primary px-3 py-2 transition-colors"
+              >
+                Clear
+              </button>
             )}
           </div>
         </div>
 
+        {/* Table */}
         {loading ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">Loading...</div>
+          <div className="glass p-8 text-center">
+            <div className="shimmer w-48 h-4 rounded mx-auto" />
+          </div>
         ) : orders.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">{hasFilters ? 'No orders match your filters' : 'No orders yet'}</div>
+          <div className="glass p-8 text-center text-text-secondary">
+            {hasFilters ? 'No orders match your filters' : 'No orders yet'}
+          </div>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="glass overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Order ID</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Customer</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Product</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Payment</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <tr className="border-b border-white/[0.08]">
+                    <th className="w-8 px-4 py-3" />
+                    <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      Order ID
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden md:table-cell">
+                      Product
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden sm:table-cell">
+                      Payment
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider hidden lg:table-cell">
+                      Date
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-white/[0.05]">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4">
-                        <Link href={`/admin/orders/${order.id}`} className="text-sm font-mono text-indigo-600 hover:text-indigo-800">{order.id.slice(0, 8)}...</Link>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-600">{formatDateTime(order.created_at)}</td>
-                      <td className="px-4 py-4">
-                        <p className="text-sm font-medium text-gray-900">{order.customer_email}</p>
-                        {order.customer_name && <p className="text-xs text-gray-500">{order.customer_name}</p>}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 hidden md:table-cell">{order.product_name || 'Unknown'}</td>
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">{formatPrice(order.amount_cents)}</td>
-                      <td className="px-4 py-4 hidden sm:table-cell"><PaymentMethodBadge method={order.payment_method || 'stripe'} /></td>
-                      <td className="px-4 py-4">
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          order.status === 'completed' ? 'bg-green-100 text-green-700'
-                            : order.status === 'refunded' ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>{order.status}</span>
-                      </td>
-                    </tr>
+                    <>
+                      <tr
+                        key={order.id}
+                        className="hover:bg-white/[0.03] transition-colors cursor-pointer"
+                        onClick={() =>
+                          setExpandedId(
+                            expandedId === order.id ? null : order.id
+                          )
+                        }
+                      >
+                        <td className="px-4 py-4">
+                          {expandedId === order.id ? (
+                            <ChevronUp
+                              className="w-4 h-4 text-text-secondary"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <ChevronDown
+                              className="w-4 h-4 text-text-secondary"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="text-sm font-mono text-indigo-400">
+                            {order.id.slice(0, 8)}...
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <p className="text-sm font-medium text-text-primary">
+                            {order.customer_email}
+                          </p>
+                          {order.customer_name && (
+                            <p className="text-xs text-text-secondary">
+                              {order.customer_name}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-text-primary hidden md:table-cell">
+                          {order.product_name || 'Unknown'}
+                        </td>
+                        <td className="px-4 py-4 text-sm font-medium text-text-primary">
+                          {formatPrice(order.amount_cents)}
+                        </td>
+                        <td className="px-4 py-4 hidden sm:table-cell">
+                          <PaymentMethodBadge
+                            method={order.payment_method || 'stripe'}
+                          />
+                        </td>
+                        <td className="px-4 py-4">
+                          <StatusBadge status={order.status} />
+                        </td>
+                        <td className="px-4 py-4 text-sm text-text-secondary hidden lg:table-cell">
+                          {formatDateTime(order.created_at)}
+                        </td>
+                      </tr>
+                      {expandedId === order.id && (
+                        <tr key={`${order.id}-detail`}>
+                          <td
+                            colSpan={8}
+                            className="px-4 py-4 bg-white/[0.02]"
+                          >
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-text-secondary text-xs mb-1">
+                                  Full Order ID
+                                </p>
+                                <p className="text-text-primary font-mono text-xs break-all">
+                                  {order.id}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-text-secondary text-xs mb-1">
+                                  Customer
+                                </p>
+                                <p className="text-text-primary">
+                                  {order.customer_email}
+                                </p>
+                                {order.customer_name && (
+                                  <p className="text-text-secondary text-xs">
+                                    {order.customer_name}
+                                  </p>
+                                )}
+                              </div>
+                              <div>
+                                <p className="text-text-secondary text-xs mb-1">
+                                  Product
+                                </p>
+                                <p className="text-text-primary">
+                                  {order.product_name || 'Unknown'}
+                                </p>
+                              </div>
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-text-secondary text-xs mb-1">
+                                    Date
+                                  </p>
+                                  <p className="text-text-primary">
+                                    {formatDateTime(order.created_at)}
+                                  </p>
+                                </div>
+                                <Link
+                                  href={`/admin/orders/${order.id}`}
+                                  className="p-2 rounded-lg text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                                  title="View details"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink
+                                    className="w-4 h-4"
+                                    aria-hidden="true"
+                                  />
+                                </Link>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ))}
                 </tbody>
               </table>
