@@ -164,7 +164,7 @@ export default function OrderDetailPage() {
                           : 'bg-purple-100 text-purple-700'
                       }`}>
                         {(order.payment_method || 'stripe') === 'paypal' ? 'PayPal'
-                          : (order.payment_method || 'stripe') === 'crypto' ? '₿ Crypto'
+                          : (order.payment_method || 'stripe') === 'crypto' ? 'Crypto'
                           : 'Stripe'}
                       </span>
                     </div>

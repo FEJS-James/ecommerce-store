@@ -3,6 +3,7 @@ import { queryOne, queryAll } from '@/lib/db';
 import { formatPrice, CATEGORIES, CATEGORY_FAQS } from '@/lib/utils';
 import ProductCard from '@/components/ProductCard';
 import BuyButton from '@/components/BuyButton';
+import PayPalButton from '@/components/PayPalButton';
 import CategoryIcon from '@/components/CategoryIcon';
 import { Zap, Lock, ShieldCheck, Mail, FileText, HardDrive } from 'lucide-react';
 import type { Product } from '@/lib/types';
@@ -224,6 +225,11 @@ export default async function ProductPage({ params }: PageProps) {
             <BuyButton
               productId={product.id}
               price={formatPrice(product.price_cents)}
+              className="mb-4"
+            />
+
+            <PayPalButton
+              productId={product.id}
               className="mb-6"
             />
 

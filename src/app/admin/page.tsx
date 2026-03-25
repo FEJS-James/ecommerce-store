@@ -2,6 +2,7 @@ import AdminGuard from '@/components/AdminGuard';
 import { queryOne, queryAll } from '@/lib/db';
 import { formatPrice, formatDateTime } from '@/lib/utils';
 import Link from 'next/link';
+import { CreditCard, Coins } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -202,9 +203,7 @@ export default async function AdminDashboardPage() {
                 const label = method.payment_method === 'paypal' ? 'PayPal'
                   : method.payment_method === 'crypto' ? 'Crypto'
                   : 'Stripe';
-                const icon = method.payment_method === 'paypal' ? 'PP'
-                  : method.payment_method === 'crypto' ? '₿'
-                  : 'CC';
+                const IconComponent = method.payment_method === 'crypto' ? Coins : CreditCard;
                 const bgColor = method.payment_method === 'paypal' ? 'bg-blue-50 border-blue-200'
                   : method.payment_method === 'crypto' ? 'bg-orange-50 border-orange-200'
                   : 'bg-purple-50 border-purple-200';
@@ -215,7 +214,7 @@ export default async function AdminDashboardPage() {
                 return (
                   <div key={method.payment_method} className={`rounded-xl border p-4 ${bgColor}`}>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">{icon}</span>
+                      <IconComponent className={`w-5 h-5 ${textColor}`} />
                       <span className={`font-medium text-sm ${textColor}`}>{label}</span>
                     </div>
                     <p className="text-2xl font-bold text-gray-900">{formatPrice(method.revenue)}</p>

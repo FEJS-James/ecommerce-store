@@ -125,6 +125,8 @@ function AccountPrompt({ email }: { email: string }) {
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
+  const orderId = searchParams.get('order_id');
+  const verifyToken = searchParams.get('token');
   const [order, setOrder] = useState<OrderWithProduct | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,12 +141,19 @@ function OrderSuccessContent() {
   }, []);
 
   useEffect(() => {
-    if (!sessionId) {
+    if (!sessionId && !orderId) {
       setLoading(false);
       return;
     }
 
-    fetch(`/api/orders/lookup?session_id=${sessionId}`)
+    let lookupParam = sessionId
+      ? `session_id=${sessionId}`
+      : `order_id=${orderId}`;
+    if (verifyToken && !sessionId) {
+      lookupParam += `&token=${encodeURIComponent(verifyToken)}`;
+    }
+
+    fetch(`/api/orders/lookup?${lookupParam}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.order) {
@@ -156,7 +165,7 @@ function OrderSuccessContent() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [sessionId]);
+  }, [sessionId, orderId, verifyToken]);
 
   if (loading) {
     return (

@@ -7,7 +7,17 @@ export function isPayPalConfigured(): boolean {
   return !!(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET);
 }
 
+// Module-level token cache
+let cachedToken: string | null = null;
+let tokenExpiresAt = 0;
+
 async function getAccessToken(): Promise<string> {
+  // Return cached token if still valid (with 60s safety buffer)
+  const now = Date.now();
+  if (cachedToken && now < tokenExpiresAt - 60_000) {
+    return cachedToken;
+  }
+
   const clientId = process.env.PAYPAL_CLIENT_ID!;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET!;
 
@@ -28,7 +38,10 @@ async function getAccessToken(): Promise<string> {
   }
 
   const data = await res.json();
-  return data.access_token as string;
+  cachedToken = data.access_token as string;
+  // PayPal tokens typically expire in ~9 hours; expires_in is in seconds
+  tokenExpiresAt = now + (data.expires_in as number) * 1000;
+  return cachedToken;
 }
 
 export interface PayPalOrderResponse {

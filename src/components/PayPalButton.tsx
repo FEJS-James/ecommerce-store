@@ -117,8 +117,9 @@ export default function PayPalButton({ productId, className = '' }: PayPalButton
               throw new Error(captureData.error || 'Payment capture failed');
             }
 
-            // Redirect to success page with the internal order ID
-            window.location.href = `/order/success?order_id=${captureData.orderId}`;
+            // Redirect to success page with the internal order ID and verification token
+            const tokenParam = captureData.token ? `&token=${captureData.token}` : '';
+            window.location.href = `/order/success?order_id=${captureData.orderId}${tokenParam}`;
           } catch (err) {
             setError(
               err instanceof Error ? err.message : 'Payment failed. Please try again.'
@@ -152,7 +153,7 @@ export default function PayPalButton({ productId, className = '' }: PayPalButton
   return (
     <div className={className}>
       {capturing && (
-        <div className="flex items-center justify-center gap-2 py-4 text-gray-600">
+        <div className="flex items-center justify-center gap-2 py-4 text-zinc-400">
           <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
             <circle
               className="opacity-25"
@@ -177,7 +178,7 @@ export default function PayPalButton({ productId, className = '' }: PayPalButton
         className={capturing ? 'hidden' : ''}
       />
       {error && (
-        <p className="text-amber-600 text-sm mt-2 text-center">{error}</p>
+        <p className="text-amber-400 text-sm mt-2 text-center">{error}</p>
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AdminSidebar from '@/components/AdminSidebar';
 import { formatPrice, formatDateTime } from '@/lib/utils';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { CreditCard, Coins } from 'lucide-react';
 
 interface OrderRow {
   id: string;
@@ -20,11 +21,11 @@ interface OrderRow {
 function PaymentMethodBadge({ method }: { method: string }) {
   switch (method) {
     case 'paypal':
-      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">PayPal</span>;
+      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium"><CreditCard className="w-3 h-3" /> PayPal</span>;
     case 'crypto':
-      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium">₿ Crypto</span>;
+      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium"><Coins className="w-3 h-3" /> Crypto</span>;
     default:
-      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">Stripe</span>;
+      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium"><CreditCard className="w-3 h-3" /> Stripe</span>;
   }
 }
 
