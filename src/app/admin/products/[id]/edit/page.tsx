@@ -8,6 +8,7 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import type { Product } from '@/lib/types';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import ProductFilePanel from '@/components/admin/ProductFilePanel';
 
 export default function EditProductPage() {
   const { authenticated, checking } = useAdminAuth();
@@ -86,6 +87,21 @@ export default function EditProductPage() {
               Edit: {product.name}
             </h1>
             <ProductForm product={product} stats={stats} />
+            <div className="mt-8">
+              <h2 className="text-lg font-semibold text-white mb-4">Product File</h2>
+              <ProductFilePanel
+                productId={id}
+                fileName={product.file_name}
+                fileUrl={product.file_url}
+                fileSizeBytes={product.file_size_bytes}
+                onFileChange={() => {
+                  fetch(`/api/admin/products/${id}`)
+                    .then(res => res.json())
+                    .then(data => setProduct(data.product || null))
+                    .catch(() => {});
+                }}
+              />
+            </div>
           </>
         ) : null}
       </main>

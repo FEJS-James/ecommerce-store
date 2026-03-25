@@ -106,3 +106,46 @@ export async function POST(
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    const product = await queryOne<{ id: string; file_url: string | null }>(
+      'SELECT id, file_url FROM products WHERE id = ?',
+      [id]
+    );
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+    if (!product.file_url) {
+      return NextResponse.json({ error: 'No file to delete' }, { status: 404 });
+    }
+
+    // Delete from blob storage
+    if (isBlobConfigured()) {
+      try {
+        await deleteFromBlob(product.file_url);
+      } catch {
+        // Non-critical
+      }
+    }
+
+    // Clear file fields in DB
+    await execute(
+      "UPDATE products SET file_url = NULL, file_name = NULL, file_size_bytes = 0, updated_at = datetime('now') WHERE id = ?",
+      [id]
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('File delete error:', error);
+    return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+  }
+}
