@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTierForCountry } from "@/lib/pricing";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const countryCode = request.headers.get("x-vercel-ip-country");
   const tierInfo = getTierForCountry(countryCode);
 
