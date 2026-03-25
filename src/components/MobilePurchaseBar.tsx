@@ -12,6 +12,7 @@ import {
   HardDrive,
 } from "lucide-react";
 import CategoryIcon from "@/components/CategoryIcon";
+import CheckoutConsent from "@/components/CheckoutConsent";
 import { usePricing } from "@/hooks/usePricing";
 import {
   convertCents,
@@ -46,6 +47,7 @@ export default function MobilePurchaseBar({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
   const { tier, currency, ready } = usePricing();
 
   const convertedCents = convertCents(priceCents, currency);
@@ -70,6 +72,7 @@ export default function MobilePurchaseBar({
       : null;
 
   async function handleBuy() {
+    if (!consentGiven) return;
     setLoading(true);
     setError("");
     try {
@@ -121,18 +124,10 @@ export default function MobilePurchaseBar({
             </button>
           </div>
           <button
-            onClick={handleBuy}
-            disabled={loading}
+            onClick={() => setExpanded(true)}
             className="btn-gradient px-6 py-3 rounded-xl font-semibold text-base whitespace-nowrap flex items-center gap-2 focus-glow min-h-[44px]"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                <span>Processing</span>
-              </>
-            ) : (
-              <span>Buy Now</span>
-            )}
+            <span>Buy Now</span>
           </button>
         </div>
         {error && (
@@ -209,10 +204,26 @@ export default function MobilePurchaseBar({
               </div>
             )}
 
+            <div className="mb-5">
+              <CheckoutConsent
+                onConsentChange={setConsentGiven}
+                isDigitalProduct={true}
+              />
+            </div>
+
             <button
               onClick={handleBuy}
-              disabled={loading}
-              className="w-full btn-gradient px-8 py-4 rounded-xl font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-2 focus-glow mb-5 min-h-[48px]"
+              disabled={loading || !consentGiven}
+              className={`w-full btn-gradient px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 focus-glow mb-5 min-h-[48px] ${
+                !consentGiven
+                  ? "opacity-50 cursor-not-allowed"
+                  : "disabled:opacity-50"
+              }`}
+              title={
+                !consentGiven
+                  ? "Please agree to the terms above before purchasing"
+                  : undefined
+              }
             >
               {loading ? (
                 <>

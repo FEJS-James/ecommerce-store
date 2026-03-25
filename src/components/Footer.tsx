@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-2">
             <Link
               href="/"
               className="flex items-center gap-2.5 font-bold text-xl text-white mb-4"
@@ -19,12 +19,13 @@ export default function Footer() {
               <span>AI Armory</span>
             </Link>
             <p className="text-zinc-500 max-w-md text-sm leading-relaxed">
-              Ready-to-deploy AI automation for businesses. Blueprints, agent
-              configs, and expert setup services.
+              Your arsenal of AI-powered digital products for creators,
+              developers, and professionals. Instant delivery. Lifetime access.
+              No subscriptions.
             </p>
           </div>
 
-          {/* Products */}
+          {/* Products Links */}
           <div>
             <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
               Products
@@ -32,73 +33,40 @@ export default function Footer() {
             <ul className="space-y-2.5">
               <li>
                 <Link
-                  href="/products?category=automation-blueprints"
-                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
-                >
-                  Automation Blueprints
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/products?category=agent-configs"
-                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
-                >
-                  Agent Configurations
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/products?category=prompt-packs"
                   className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
                 >
-                  Prompt Engineering
+                  AI Prompt Packs
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/products"
+                  href="/products?category=finance-templates"
                   className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
                 >
-                  All Products
+                  Finance Templates
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/products?category=dev-templates"
+                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
+                >
+                  Dev Templates
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/products?category=notion-templates"
+                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
+                >
+                  Notion Templates
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Services */}
-          <div>
-            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
-              Services
-            </h3>
-            <ul className="space-y-2.5">
-              <li>
-                <Link
-                  href="/services"
-                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
-                >
-                  Strategy Session
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/services"
-                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
-                >
-                  Done-For-You Setup
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/services"
-                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
-                >
-                  Enterprise Solutions
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Support */}
+          {/* Support & Legal Links */}
           <div>
             <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
               Support
@@ -114,10 +82,56 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/products"
+                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
+                >
+                  All Products
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/account"
                   className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
                 >
                   My Account
+                </Link>
+              </li>
+            </ul>
+
+            <h3 className="text-white font-semibold mb-4 mt-6 text-sm uppercase tracking-wider">
+              Legal
+            </h3>
+            <ul className="space-y-2.5">
+              <li>
+                <Link
+                  href="/terms"
+                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
+                >
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/sales-terms"
+                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
+                >
+                  Sales Terms &amp; Refund Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/cookies"
+                  className="text-zinc-500 hover:text-indigo-400 transition-colors text-sm"
+                >
+                  Cookie Policy
                 </Link>
               </li>
             </ul>

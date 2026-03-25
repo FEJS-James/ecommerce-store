@@ -2,9 +2,8 @@ import { notFound } from "next/navigation";
 import { queryOne, queryAll } from "@/lib/db";
 import { formatPrice, CATEGORIES, CATEGORY_FAQS } from "@/lib/utils";
 import ProductCard from "@/components/ProductCard";
-import BuyButton from "@/components/BuyButton";
 import GeoPrice from "@/components/GeoPrice";
-import PayPalButton from "@/components/PayPalButton";
+import PurchaseActions from "@/components/PurchaseActions";
 import CategoryIcon from "@/components/CategoryIcon";
 import ImageGallery from "@/components/ImageGallery";
 import FAQAccordion from "@/components/FAQAccordion";
@@ -422,12 +421,11 @@ export default async function ProductPage({ params }: PageProps) {
                 <div className="mb-6" />
               )}
 
-              <BuyButton
+              <PurchaseActions
                 productId={product.id}
                 priceCents={product.price_cents}
-                className="mb-4"
+                isDigitalProduct={true}
               />
-              <PayPalButton productId={product.id} className="mb-6" />
 
               <div className="space-y-3 text-sm text-zinc-500 mb-6">
                 <div className="flex items-center gap-2.5">

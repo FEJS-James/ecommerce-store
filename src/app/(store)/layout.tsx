@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RegionalPricingBanner from "@/components/RegionalPricingBanner";
+import CookieBanner from "@/components/CookieBanner";
 
 export default function StoreLayout({
   children,
@@ -13,6 +14,7 @@ export default function StoreLayout({
       <RegionalPricingBanner />
       <main className="flex-1">{children}</main>
       <Footer />
+      <CookieBanner />
     </div>
   );
 }
