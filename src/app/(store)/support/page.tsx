@@ -468,16 +468,6 @@ export default function SupportPage() {
         </p>
       </div>
 
-      {/* FAQ Section */}
-      <section id="faq" className="mb-16">
-        <h2 className="text-2xl font-bold text-white mb-8">
-          Frequently Asked Questions
-        </h2>
-        {FAQ_CATEGORIES.map((category) => (
-          <FAQCategorySection key={category.name} category={category} />
-        ))}
-      </section>
-
       {/* Contact Section */}
       <section id="contact" className="mb-16">
         <h2 className="text-2xl font-bold text-white mb-6">Contact Us</h2>
@@ -535,9 +525,19 @@ export default function SupportPage() {
       </section>
 
       {/* Support Request Form */}
-      <section id="request">
+      <section id="request" className="mb-16">
         <h2 className="text-2xl font-bold text-white mb-6">Submit a Request</h2>
         <SupportForm />
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq">
+        <h2 className="text-2xl font-bold text-white mb-8">
+          Frequently Asked Questions
+        </h2>
+        {FAQ_CATEGORIES.map((category) => (
+          <FAQCategorySection key={category.name} category={category} />
+        ))}
       </section>
     </div>
   );

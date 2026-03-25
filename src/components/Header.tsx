@@ -2,15 +2,21 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, User, HelpCircle } from "lucide-react";
+import { Menu, X, User, LogIn } from "lucide-react";
 import Logo from "./Logo";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    fetch("/api/account/me", { credentials: "include" })
+      .then((res) => {
+        if (res.ok) setIsLoggedIn(true);
+      })
+      .catch(() => {});
   }, []);
 
   // Prevent body scroll when mobile menu is open
@@ -25,14 +31,15 @@ export default function Header() {
     };
   }, [mobileMenuOpen]);
 
+  const accountHref = isLoggedIn ? "/account" : "/account/login";
+  const accountLabel = isLoggedIn ? "Account" : "Login";
+  const AccountIcon = isLoggedIn ? User : LogIn;
+
   return (
     <header className="glass !rounded-none !border-x-0 !border-t-0 !bg-[rgba(10,10,15,0.8)] sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link
-            href="/"
-            className="flex items-center group"
-          >
+          <Link href="/" className="flex items-center group">
             <span className="hidden sm:inline-flex">
               <Logo size={28} variant="full" colorVariant="gradient" />
             </span>
@@ -50,30 +57,23 @@ export default function Header() {
               Products
             </Link>
             <Link
-              href="/free"
+              href="/services"
               className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
             >
-              Free Downloads
+              Services
             </Link>
             <Link
               href="/support"
-              className="text-zinc-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1.5"
+              className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
             >
-              <HelpCircle className="w-4 h-4" aria-hidden="true" />
               Support
             </Link>
             <Link
-              href="/account"
+              href={accountHref}
               className="text-zinc-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1.5"
             >
-              <User className="w-4 h-4" aria-hidden="true" />
-              Account
-            </Link>
-            <Link
-              href="/products"
-              className="btn-gradient px-5 py-2 rounded-lg font-medium text-sm focus-glow"
-            >
-              Browse All
+              <AccountIcon className="w-4 h-4" aria-hidden="true" />
+              {accountLabel}
             </Link>
           </div>
 
@@ -134,37 +134,26 @@ export default function Header() {
                 Products
               </Link>
               <Link
-                href="/free"
+                href="/services"
                 className="text-zinc-300 hover:text-white px-4 py-3 rounded-lg hover:bg-white/[0.05] transition-colors font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Free Downloads
+                Services
               </Link>
               <Link
                 href="/support"
-                className="text-zinc-300 hover:text-white px-4 py-3 rounded-lg hover:bg-white/[0.05] transition-colors font-medium flex items-center gap-2"
+                className="text-zinc-300 hover:text-white px-4 py-3 rounded-lg hover:bg-white/[0.05] transition-colors font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <HelpCircle className="w-4 h-4" aria-hidden="true" />
                 Support
               </Link>
               <Link
-                href="/account"
+                href={accountHref}
                 className="text-zinc-300 hover:text-white px-4 py-3 rounded-lg hover:bg-white/[0.05] transition-colors font-medium flex items-center gap-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <User className="w-4 h-4" aria-hidden="true" />
-                My Account
-              </Link>
-            </div>
-
-            <div className="mt-auto">
-              <Link
-                href="/products"
-                className="btn-gradient block w-full px-5 py-3 rounded-lg font-medium text-center text-sm focus-glow"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Browse All Products
+                <AccountIcon className="w-4 h-4" aria-hidden="true" />
+                {accountLabel}
               </Link>
             </div>
           </div>
