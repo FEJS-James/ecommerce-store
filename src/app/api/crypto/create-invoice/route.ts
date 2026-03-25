@@ -12,10 +12,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
     }
 
-    if (!customerEmail) {
-      return NextResponse.json({ error: 'Customer email required' }, { status: 400 });
-    }
-
     if (!isBTCPayConfigured()) {
       return NextResponse.json({ error: 'btcpay_not_configured' }, { status: 503 });
     }
@@ -37,7 +33,7 @@ export async function POST(request: NextRequest) {
       amount: product.price_cents,
       productId: product.id,
       productName: product.name,
-      customerEmail,
+      customerEmail: customerEmail || '',
       orderId,
     });
 
