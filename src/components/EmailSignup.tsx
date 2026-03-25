@@ -81,6 +81,7 @@ export default function EmailSignup({
         <button
           type="submit"
           disabled={status === "loading"}
+          data-umami-event="newsletter_signup"
           className="btn-gradient px-6 py-2.5 rounded-lg font-medium text-sm disabled:opacity-50"
         >
           {status === "loading" ? "..." : "Subscribe"}
@@ -112,6 +113,7 @@ export default function EmailSignup({
       <button
         type="submit"
         disabled={status === "loading"}
+        data-umami-event="newsletter_signup"
         className="w-full btn-gradient px-6 py-3 rounded-xl font-medium disabled:opacity-50"
       >
         {status === "loading" ? "Subscribing..." : "Get Free Resources"}

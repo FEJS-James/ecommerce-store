@@ -7,6 +7,7 @@ import ProductCard from "@/components/ProductCard";
 import { formatPrice } from "@/lib/utils";
 import { CheckCircle2, Download, KeyRound, ShoppingBag } from "lucide-react";
 import type { Product, Order } from "@/lib/types";
+import TrackPageView from "@/components/TrackPageView";
 
 interface OrderWithProduct extends Order {
   product_name?: string;
@@ -257,6 +258,7 @@ function OrderSuccessContent() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <TrackPageView event="purchase_complete" />
       <div className="text-center mb-12">
         <CelebrationAnimation />
         <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">

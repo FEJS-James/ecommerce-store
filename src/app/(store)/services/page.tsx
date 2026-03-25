@@ -102,6 +102,7 @@ export default function ServicesPage() {
             <ServiceCardLink
               href={`mailto:hello@aiarmory.com?subject=${encodeURIComponent(service.name)}`}
               serviceName={service.name}
+              data-umami-event="service_enquiry"
             />
           </div>
         ))}
