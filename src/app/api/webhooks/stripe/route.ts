@@ -98,8 +98,8 @@ async function handleCheckoutCompleted(session: Record<string, unknown>) {
   // Create order — linked to customer
   const orderId = uuidv4().replace(/-/g, '');
   await execute(
-    `INSERT INTO orders (id, stripe_session_id, stripe_payment_intent, customer_email, customer_name, customer_id, product_id, amount_cents, currency, status, download_token, token_expires_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?, ?)`,
+    `INSERT INTO orders (id, stripe_session_id, stripe_payment_intent, payment_method, customer_email, customer_name, customer_id, product_id, amount_cents, currency, status, download_token, token_expires_at)
+     VALUES (?, ?, ?, 'stripe', ?, ?, ?, ?, ?, ?, 'completed', ?, ?)`,
     [
       orderId,
       session.id as string,

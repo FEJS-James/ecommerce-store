@@ -115,6 +115,20 @@ export async function initializeDb(): Promise<void> {
     },
   ], 'write');
 
+  // Migration: add payment_method to orders (stripe | paypal | crypto)
+  try {
+    await db.execute({ sql: `ALTER TABLE orders ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'stripe'`, args: [] });
+  } catch {
+    // Column already exists — ignore
+  }
+
+  // Migration: add paypal_order_id to orders
+  try {
+    await db.execute({ sql: `ALTER TABLE orders ADD COLUMN paypal_order_id TEXT`, args: [] });
+  } catch {
+    // Column already exists — ignore
+  }
+
   // Migration: add customer_id to orders if not present
   try {
     await db.execute({ sql: `ALTER TABLE orders ADD COLUMN customer_id TEXT REFERENCES customers(id)`, args: [] });

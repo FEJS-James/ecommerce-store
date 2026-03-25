@@ -17,6 +17,8 @@ export async function POST(
     const order = await queryOne<{
       id: string;
       stripe_payment_intent: string | null;
+      paypal_order_id: string | null;
+      payment_method: string;
       status: string;
       amount_cents: number;
       customer_email: string;
@@ -31,15 +33,17 @@ export async function POST(
       return NextResponse.json({ error: 'Order already refunded' }, { status: 400 });
     }
 
-    let stripeRefunded = false;
-    if (order.stripe_payment_intent) {
+    let providerRefunded = false;
+    const paymentMethod = order.payment_method || 'stripe';
+
+    if (paymentMethod === 'stripe' && order.stripe_payment_intent) {
       const stripe = getStripe();
       if (stripe) {
         try {
           await stripe.refunds.create({
             payment_intent: order.stripe_payment_intent,
           });
-          stripeRefunded = true;
+          providerRefunded = true;
         } catch (stripeError) {
           console.error('Stripe refund error:', stripeError);
           return NextResponse.json(
@@ -48,31 +52,34 @@ export async function POST(
           );
         }
       }
+    } else if (paymentMethod === 'paypal' && order.paypal_order_id) {
+      // PayPal refunds must be done through PayPal dashboard or their refund API
+      // For now, mark as refunded locally. Admin should process refund in PayPal dashboard.
+      console.log(`[Refund] PayPal order ${order.paypal_order_id} — admin must refund via PayPal dashboard`);
     }
 
     await execute(
-      `UPDATE orders SET status = 'refunded' WHERE id = ?`,
-      [id]
-    );
-
-    await execute(
-      `UPDATE orders SET download_token = NULL, token_expires_at = NULL WHERE id = ?`,
+      `UPDATE orders SET status = 'refunded', download_token = NULL, token_expires_at = NULL WHERE id = ?`,
       [id]
     );
 
     if (order.customer_id) {
       await execute(
-        `UPDATE customers SET total_spent_cents = total_spent_cents - ?, order_count = MAX(order_count - 1, 0), updated_at = datetime('now') WHERE id = ?`,
+        `UPDATE customers SET total_spent_cents = MAX(0, total_spent_cents - ?), order_count = MAX(order_count - 1, 0), updated_at = datetime('now') WHERE id = ?`,
         [order.amount_cents, order.customer_id]
       );
     }
 
+    const message = providerRefunded
+      ? 'Order refunded via Stripe and download revoked'
+      : paymentMethod === 'paypal'
+        ? 'Order marked as refunded and download revoked. Please also refund via PayPal dashboard.'
+        : 'Order marked as refunded and download revoked (no payment provider refund processed)';
+
     return NextResponse.json({
       success: true,
-      stripeRefunded,
-      message: stripeRefunded
-        ? 'Order refunded via Stripe and download revoked'
-        : 'Order marked as refunded and download revoked (no Stripe payment to refund)',
+      providerRefunded,
+      message,
     });
   } catch (error) {
     console.error('Refund error:', error);

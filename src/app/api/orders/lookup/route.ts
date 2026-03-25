@@ -6,17 +6,28 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const sessionId = request.nextUrl.searchParams.get('session_id');
+    const orderId = request.nextUrl.searchParams.get('order_id');
 
-    if (!sessionId) {
-      return NextResponse.json({ error: 'session_id is required' }, { status: 400 });
+    if (!sessionId && !orderId) {
+      return NextResponse.json({ error: 'session_id or order_id is required' }, { status: 400 });
     }
 
-    const order = await queryOne(`
-      SELECT o.*, p.name as product_name, p.slug as product_slug, p.category as product_category
-      FROM orders o
-      LEFT JOIN products p ON p.id = o.product_id
-      WHERE o.stripe_session_id = ?
-    `, [sessionId]);
+    let order;
+    if (orderId) {
+      order = await queryOne(`
+        SELECT o.*, p.name as product_name, p.slug as product_slug, p.category as product_category
+        FROM orders o
+        LEFT JOIN products p ON p.id = o.product_id
+        WHERE o.id = ?
+      `, [orderId]);
+    } else {
+      order = await queryOne(`
+        SELECT o.*, p.name as product_name, p.slug as product_slug, p.category as product_category
+        FROM orders o
+        LEFT JOIN products p ON p.id = o.product_id
+        WHERE o.stripe_session_id = ?
+      `, [sessionId]);
+    }
 
     if (!order) {
       return NextResponse.json({ order: null });

@@ -25,6 +25,8 @@ export interface Order {
   id: string;
   stripe_session_id: string | null;
   stripe_payment_intent: string | null;
+  paypal_order_id: string | null;
+  payment_method: 'stripe' | 'paypal' | 'crypto';
   customer_email: string;
   customer_name: string | null;
   customer_id: string | null;

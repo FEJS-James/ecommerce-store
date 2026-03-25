@@ -3,6 +3,8 @@ import { queryOne, queryAll } from '@/lib/db';
 import { formatPrice, CATEGORIES, CATEGORY_FAQS } from '@/lib/utils';
 import ProductCard from '@/components/ProductCard';
 import BuyButton from '@/components/BuyButton';
+import CategoryIcon from '@/components/CategoryIcon';
+import { Zap, Lock, ShieldCheck, Mail, FileText, HardDrive } from 'lucide-react';
 import type { Product } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +34,7 @@ export default async function ProductPage({ params }: PageProps) {
   }
 
   const relatedProducts = await queryAll<Product>(
-    "SELECT * FROM products WHERE category = ? AND id != ? AND status = 'active' LIMIT 4",
+    "SELECT * FROM products WHERE category = ? AND id != ? AND status = 'active' LIMIT 3",
     [product.category, product.id]
   );
 
@@ -46,7 +48,7 @@ export default async function ProductPage({ params }: PageProps) {
     previewImages = Array.isArray(parsed) ? parsed : [];
   } catch { /* ignore */ }
 
-  // Simple markdown-ish rendering
+  // Simple markdown-ish rendering for dark theme
   function renderDescription(text: string) {
     const lines = text.split('\n');
     const elements: React.ReactNode[] = [];
@@ -56,7 +58,7 @@ export default async function ProductPage({ params }: PageProps) {
     function flushList() {
       if (listItems.length > 0) {
         elements.push(
-          <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-600 mb-4">
+          <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-1 text-zinc-400 mb-4 ml-1">
             {listItems.map((item, i) => (
               <li key={i} dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
             ))}
@@ -69,9 +71,9 @@ export default async function ProductPage({ params }: PageProps) {
 
     function formatInline(text: string): string {
       return text
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white">$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/`(.+?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>');
+        .replace(/`(.+?)`/g, '<code class="bg-white/[0.06] px-1.5 py-0.5 rounded text-sm text-indigo-300 font-mono">$1</code>');
     }
 
     for (const line of lines) {
@@ -80,14 +82,14 @@ export default async function ProductPage({ params }: PageProps) {
       if (trimmed.startsWith('# ')) {
         flushList();
         elements.push(
-          <h1 key={elements.length} className="text-3xl font-bold text-gray-900 mb-4">
+          <h1 key={elements.length} className="text-3xl font-bold text-white mb-4">
             {trimmed.slice(2)}
           </h1>
         );
       } else if (trimmed.startsWith('## ')) {
         flushList();
         elements.push(
-          <h2 key={elements.length} className="text-xl font-semibold text-gray-900 mt-6 mb-3">
+          <h2 key={elements.length} className="text-xl font-semibold text-white mt-8 mb-3">
             {trimmed.slice(3)}
           </h2>
         );
@@ -101,7 +103,7 @@ export default async function ProductPage({ params }: PageProps) {
         elements.push(
           <p
             key={elements.length}
-            className="text-gray-600 mb-4 leading-relaxed"
+            className="text-zinc-400 mb-4 leading-relaxed"
             dangerouslySetInnerHTML={{ __html: formatInline(trimmed) }}
           />
         );
@@ -120,23 +122,23 @@ export default async function ProductPage({ params }: PageProps) {
         {/* Main Content */}
         <div className="lg:col-span-2">
           {/* Breadcrumb */}
-          <nav className="text-sm text-gray-500 mb-6">
-            <a href="/products" className="hover:text-indigo-600">Products</a>
-            <span className="mx-2">›</span>
+          <nav className="text-sm text-zinc-500 mb-6" aria-label="Breadcrumb">
+            <a href="/products" className="hover:text-indigo-400 transition-colors">Products</a>
+            <span className="mx-2 text-zinc-700">/</span>
             {category && (
               <>
-                <a href={`/products?category=${product.category}`} className="hover:text-indigo-600">
+                <a href={`/products?category=${product.category}`} className="hover:text-indigo-400 transition-colors">
                   {category.label}
                 </a>
-                <span className="mx-2">›</span>
+                <span className="mx-2 text-zinc-700">/</span>
               </>
             )}
-            <span className="text-gray-900">{product.name}</span>
+            <span className="text-zinc-300">{product.name}</span>
           </nav>
 
           {/* Product Image */}
           {product.thumbnail_url && (
-            <div className="relative aspect-video rounded-xl overflow-hidden mb-8 bg-gray-100">
+            <div className="relative aspect-video rounded-2xl overflow-hidden mb-8 glass">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={product.thumbnail_url}
@@ -148,11 +150,11 @@ export default async function ProductPage({ params }: PageProps) {
 
           {/* Preview Images Gallery */}
           {previewImages.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Preview</h2>
+            <div className="mb-10">
+              <h2 className="text-lg font-semibold text-white mb-4">Preview</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {previewImages.map((url, i) => (
-                  <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                  <div key={i} className="relative aspect-video rounded-xl overflow-hidden glass">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={url}
@@ -166,19 +168,19 @@ export default async function ProductPage({ params }: PageProps) {
           )}
 
           {/* Description */}
-          <div className="prose max-w-none">
+          <div className="max-w-none">
             {renderDescription(product.description)}
           </div>
 
           {/* FAQ */}
-          {faqs.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+          {Array.isArray(faqs) && faqs.length > 0 && (
+            <div className="mt-16">
+              <h2 className="text-2xl font-bold text-white mb-8">Frequently Asked Questions</h2>
               <div className="space-y-4">
                 {faqs.map((faq, i) => (
-                  <div key={i} className="bg-gray-50 rounded-xl p-6">
-                    <h3 className="font-semibold text-gray-900 mb-2">{faq.question}</h3>
-                    <p className="text-gray-600">{faq.answer}</p>
+                  <div key={i} className="glass rounded-2xl p-6">
+                    <h3 className="font-semibold text-white mb-2">{faq.question}</h3>
+                    <p className="text-zinc-400 text-sm leading-relaxed">{faq.answer}</p>
                   </div>
                 ))}
               </div>
@@ -188,32 +190,33 @@ export default async function ProductPage({ params }: PageProps) {
 
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white border border-gray-200 rounded-xl p-6 sticky top-24">
+          <div className="glass rounded-2xl p-6 sticky top-24">
             {category && (
-              <span className="inline-block bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1 rounded-full mb-4">
-                {category.icon} {category.label}
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full mb-4" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#A5B4FC' }}>
+                <CategoryIcon name={category.iconName} className="w-3 h-3" aria-hidden="true" />
+                {category.label}
               </span>
             )}
 
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">{product.name}</h1>
+            <h1 className="text-2xl font-bold text-white mb-4">{product.name}</h1>
 
             {product.short_description && (
-              <p className="text-gray-500 text-sm mb-6">{product.short_description}</p>
+              <p className="text-zinc-500 text-sm mb-6">{product.short_description}</p>
             )}
 
             <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-3xl font-bold text-gray-900">
+              <span className="text-3xl font-bold text-white">
                 {formatPrice(product.price_cents)}
               </span>
               {product.compare_price_cents && (
-                <span className="text-lg text-gray-400 line-through">
+                <span className="text-lg text-zinc-600 line-through">
                   {formatPrice(product.compare_price_cents)}
                 </span>
               )}
             </div>
 
             {product.compare_price_cents && (
-              <div className="bg-green-50 text-green-700 text-sm font-medium px-4 py-2 rounded-lg mb-6 text-center">
+              <div className="text-sm font-medium px-4 py-2 rounded-lg mb-6 text-center" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#6EE7B7' }}>
                 Save {formatPrice(product.compare_price_cents - product.price_cents)} ({Math.round((1 - product.price_cents / product.compare_price_cents) * 100)}% off)
               </div>
             )}
@@ -226,18 +229,18 @@ export default async function ProductPage({ params }: PageProps) {
 
             {/* File Info */}
             {hasFileInfo && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">File Details</h3>
-                <div className="space-y-1.5 text-sm text-gray-700">
+              <div className="rounded-xl p-4 mb-6" style={{ background: 'rgba(255, 255, 255, 0.03)' }}>
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">File Details</h3>
+                <div className="space-y-2 text-sm text-zinc-400">
                   {product.file_name && (
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400">📄</span>
+                      <FileText className="w-4 h-4 text-zinc-600" aria-hidden="true" />
                       <span className="truncate">{product.file_name}</span>
                     </div>
                   )}
                   {product.file_size_bytes > 0 && (
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400">💾</span>
+                      <HardDrive className="w-4 h-4 text-zinc-600" aria-hidden="true" />
                       <span>{formatFileSize(product.file_size_bytes)}</span>
                     </div>
                   )}
@@ -245,21 +248,21 @@ export default async function ProductPage({ params }: PageProps) {
               </div>
             )}
 
-            <div className="space-y-3 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <span>⚡</span>
+            <div className="space-y-3 text-sm text-zinc-500">
+              <div className="flex items-center gap-2.5">
+                <Zap className="w-4 h-4 text-indigo-400 shrink-0" aria-hidden="true" />
                 <span>Instant download after purchase</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span>🔒</span>
+              <div className="flex items-center gap-2.5">
+                <Lock className="w-4 h-4 text-indigo-400 shrink-0" aria-hidden="true" />
                 <span>Lifetime access with free updates</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span>✅</span>
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" aria-hidden="true" />
                 <span>30-day money-back guarantee</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span>📧</span>
+              <div className="flex items-center gap-2.5">
+                <Mail className="w-4 h-4 text-indigo-400 shrink-0" aria-hidden="true" />
                 <span>Email support included</span>
               </div>
             </div>
@@ -269,9 +272,9 @@ export default async function ProductPage({ params }: PageProps) {
 
       {/* Related Products */}
       {Array.isArray(relatedProducts) && relatedProducts.length > 0 && (
-        <section className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section className="mt-20 pt-16 border-t border-white/[0.06]">
+          <h2 className="text-2xl font-bold text-white mb-8">Related Products</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {relatedProducts.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

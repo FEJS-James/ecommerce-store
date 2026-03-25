@@ -13,7 +13,19 @@ interface OrderRow {
   product_name: string | null;
   amount_cents: number;
   status: string;
+  payment_method: string;
   created_at: string;
+}
+
+function PaymentMethodBadge({ method }: { method: string }) {
+  switch (method) {
+    case 'paypal':
+      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">💳 PayPal</span>;
+    case 'crypto':
+      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium">₿ Crypto</span>;
+    default:
+      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">💳 Stripe</span>;
+  }
 }
 
 export default function AdminOrdersPage() {
@@ -23,6 +35,7 @@ export default function AdminOrdersPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -37,12 +50,13 @@ export default function AdminOrdersPage() {
     if (startDate) params.set('start_date', startDate);
     if (endDate) params.set('end_date', endDate);
     if (statusFilter) params.set('status', statusFilter);
+    if (paymentMethodFilter) params.set('payment_method', paymentMethodFilter);
     if (debouncedSearch) params.set('search', debouncedSearch);
     const res = await fetch(`/api/admin/orders?${params}`);
     const data = await res.json();
     setOrders(Array.isArray(data.orders) ? data.orders : []);
     setLoading(false);
-  }, [startDate, endDate, statusFilter, debouncedSearch]);
+  }, [startDate, endDate, statusFilter, paymentMethodFilter, debouncedSearch]);
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
@@ -50,7 +64,7 @@ export default function AdminOrdersPage() {
     return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-gray-500">Loading...</p></div>;
   }
 
-  const hasFilters = startDate || endDate || statusFilter || searchQuery;
+  const hasFilters = startDate || endDate || statusFilter || paymentMethodFilter || searchQuery;
 
   return (
     <div className="min-h-screen flex bg-gray-100">
@@ -70,6 +84,15 @@ export default function AdminOrdersPage() {
               </select>
             </div>
             <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Payment</label>
+              <select value={paymentMethodFilter} onChange={(e) => setPaymentMethodFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All</option>
+                <option value="stripe">Stripe</option>
+                <option value="paypal">PayPal</option>
+                <option value="crypto">Crypto</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
@@ -82,7 +105,7 @@ export default function AdminOrdersPage() {
               <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="customer@email.com" className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             {hasFilters && (
-              <button onClick={() => { setStartDate(''); setEndDate(''); setStatusFilter(''); setSearchQuery(''); }} className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2">Clear filters</button>
+              <button onClick={() => { setStartDate(''); setEndDate(''); setStatusFilter(''); setPaymentMethodFilter(''); setSearchQuery(''); }} className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2">Clear filters</button>
             )}
           </div>
         </div>
@@ -102,6 +125,7 @@ export default function AdminOrdersPage() {
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Customer</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Product</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Amount</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Payment</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
                   </tr>
                 </thead>
@@ -118,6 +142,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900 hidden md:table-cell">{order.product_name || 'Unknown'}</td>
                       <td className="px-4 py-4 text-sm font-medium text-gray-900">{formatPrice(order.amount_cents)}</td>
+                      <td className="px-4 py-4 hidden sm:table-cell"><PaymentMethodBadge method={order.payment_method || 'stripe'} /></td>
                       <td className="px-4 py-4">
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                           order.status === 'completed' ? 'bg-green-100 text-green-700'

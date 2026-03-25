@@ -62,6 +62,11 @@ export async function GET(request: NextRequest) {
       query += ' AND o.status = ?';
       params.push(status);
     }
+    const paymentMethod = request.nextUrl.searchParams.get('payment_method');
+    if (paymentMethod) {
+      query += ' AND COALESCE(o.payment_method, \'stripe\') = ?';
+      params.push(paymentMethod);
+    }
     if (search) {
       query += ' AND (o.customer_email LIKE ? OR o.customer_name LIKE ?)';
       params.push(`%${search}%`, `%${search}%`);

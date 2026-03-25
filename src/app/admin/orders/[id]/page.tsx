@@ -11,6 +11,8 @@ interface OrderDetail {
   id: string;
   stripe_session_id: string | null;
   stripe_payment_intent: string | null;
+  paypal_order_id: string | null;
+  payment_method: string;
   customer_email: string;
   customer_name: string | null;
   customer_id: string | null;
@@ -154,8 +156,27 @@ export default function OrderDetailPage() {
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                   <h2 className="font-semibold text-gray-900 mb-4">Payment Details</h2>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-500">Payment Intent</span><span className="text-gray-900 font-mono text-xs">{order.stripe_payment_intent || '—'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Session ID</span><span className="text-gray-900 font-mono text-xs truncate ml-4 max-w-[300px]">{order.stripe_session_id || '—'}</span></div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Payment Method</span>
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
+                        (order.payment_method || 'stripe') === 'paypal' ? 'bg-blue-100 text-blue-700'
+                          : (order.payment_method || 'stripe') === 'crypto' ? 'bg-orange-100 text-orange-700'
+                          : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {(order.payment_method || 'stripe') === 'paypal' ? '💳 PayPal'
+                          : (order.payment_method || 'stripe') === 'crypto' ? '₿ Crypto'
+                          : '💳 Stripe'}
+                      </span>
+                    </div>
+                    {(order.payment_method || 'stripe') === 'stripe' && (
+                      <>
+                        <div className="flex justify-between"><span className="text-gray-500">Payment Intent</span><span className="text-gray-900 font-mono text-xs">{order.stripe_payment_intent || '—'}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Session ID</span><span className="text-gray-900 font-mono text-xs truncate ml-4 max-w-[300px]">{order.stripe_session_id || '—'}</span></div>
+                      </>
+                    )}
+                    {order.payment_method === 'paypal' && (
+                      <div className="flex justify-between"><span className="text-gray-500">PayPal Order ID</span><span className="text-gray-900 font-mono text-xs">{order.paypal_order_id || '—'}</span></div>
+                    )}
                     <div className="flex justify-between"><span className="text-gray-500">Amount</span><span className="text-gray-900 font-medium">{formatPrice(order.amount_cents)}</span></div>
                   </div>
                 </div>

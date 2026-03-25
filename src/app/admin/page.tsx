@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 interface DailyRow { date: string; revenue: number }
 interface DailyOrderRow { date: string; count: number }
 interface TopProductRow { name: string; revenue: number; sales: number }
+interface PaymentMethodRow { payment_method: string; revenue: number; count: number }
 interface OrderRow {
   id: string;
   customer_email: string;
@@ -57,6 +58,15 @@ export default async function AdminDashboardPage() {
     SELECT o.id, o.customer_email, o.amount_cents, o.status, o.created_at, p.name as product_name
     FROM orders o LEFT JOIN products p ON p.id = o.product_id
     ORDER BY o.created_at DESC LIMIT 10
+  `);
+
+  const revenueByMethod = await queryAll<PaymentMethodRow>(`
+    SELECT COALESCE(payment_method, 'stripe') as payment_method,
+           COALESCE(SUM(amount_cents), 0) as revenue,
+           COUNT(*) as count
+    FROM orders WHERE status = 'completed'
+    GROUP BY COALESCE(payment_method, 'stripe')
+    ORDER BY revenue DESC
   `);
 
   const avgOrderValue = (await queryOne<{ avg: number }>(`
@@ -182,6 +192,40 @@ export default async function AdminDashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Revenue by Payment Method */}
+        {Array.isArray(revenueByMethod) && revenueByMethod.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+            <h2 className="font-semibold text-gray-900 mb-4">Revenue by Payment Method</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {revenueByMethod.map((method) => {
+                const label = method.payment_method === 'paypal' ? 'PayPal'
+                  : method.payment_method === 'crypto' ? 'Crypto'
+                  : 'Stripe';
+                const icon = method.payment_method === 'paypal' ? '💳'
+                  : method.payment_method === 'crypto' ? '₿'
+                  : '💳';
+                const bgColor = method.payment_method === 'paypal' ? 'bg-blue-50 border-blue-200'
+                  : method.payment_method === 'crypto' ? 'bg-orange-50 border-orange-200'
+                  : 'bg-purple-50 border-purple-200';
+                const textColor = method.payment_method === 'paypal' ? 'text-blue-700'
+                  : method.payment_method === 'crypto' ? 'text-orange-700'
+                  : 'text-purple-700';
+
+                return (
+                  <div key={method.payment_method} className={`rounded-xl border p-4 ${bgColor}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">{icon}</span>
+                      <span className={`font-medium text-sm ${textColor}`}>{label}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{formatPrice(method.revenue)}</p>
+                    <p className="text-xs text-gray-500 mt-1">{method.count} order{method.count !== 1 ? 's' : ''}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
