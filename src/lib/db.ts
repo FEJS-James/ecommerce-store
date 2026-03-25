@@ -226,26 +226,6 @@ export async function initializeDb(): Promise<void> {
     // Column already exists
   }
 
-  // Migration: add status to email_subscribers
-  try {
-    await db.execute({
-      sql: `ALTER TABLE email_subscribers ADD COLUMN status TEXT NOT NULL DEFAULT 'active'`,
-      args: [],
-    });
-  } catch {
-    // Column already exists
-  }
-
-  // Migration: add refunded_at to orders
-  try {
-    await db.execute({
-      sql: `ALTER TABLE orders ADD COLUMN refunded_at TEXT`,
-      args: [],
-    });
-  } catch {
-    // Column already exists
-  }
-
   // Migration: add stripe_product_id to products if not present
   try {
     await db.execute({
