@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, User, HelpCircle, Shield } from "lucide-react";
+import { Menu, X, User, HelpCircle } from "lucide-react";
 import Logo from "./Logo";
 
 export default function Header() {

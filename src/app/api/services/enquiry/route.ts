@@ -5,6 +5,7 @@ interface EnquiryBody {
   email: string;
   company?: string;
   message: string;
+  contactMethod?: "email" | "video";
   serviceName: string;
   servicePrice: number;
 }
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       name,
       email,
       company: body.company || "N/A",
+      contactMethod: body.contactMethod || "email",
       service: serviceName,
       price: body.servicePrice,
       message: message.substring(0, 200),

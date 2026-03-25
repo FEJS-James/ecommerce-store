@@ -29,6 +29,7 @@ export default function ServiceEnquiryModal({
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [contactMethod, setContactMethod] = useState<'email' | 'video'>('email');
   const [error, setError] = useState("");
 
   const resetForm = useCallback(() => {
@@ -36,6 +37,7 @@ export default function ServiceEnquiryModal({
     setEmail("");
     setCompany("");
     setMessage("");
+    setContactMethod("email");
     setError("");
     setSubmitted(false);
   }, []);
@@ -46,6 +48,15 @@ export default function ServiceEnquiryModal({
       return () => clearTimeout(timer);
     }
   }, [isOpen, resetForm]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +83,7 @@ export default function ServiceEnquiryModal({
           email,
           company,
           message,
+          contactMethod,
           serviceName,
           servicePrice,
         }),
@@ -220,6 +232,36 @@ export default function ServiceEnquiryModal({
                   placeholder="What do you need help with?"
                 />
               </div>
+
+              <fieldset>
+                <legend className="block text-sm font-medium text-zinc-300 mb-2">
+                  Preferred Contact Method
+                </legend>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="contactMethod"
+                      value="email"
+                      checked={contactMethod === "email"}
+                      onChange={() => setContactMethod("email")}
+                      className="accent-indigo-500"
+                    />
+                    Email
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="contactMethod"
+                      value="video"
+                      checked={contactMethod === "video"}
+                      onChange={() => setContactMethod("video")}
+                      className="accent-indigo-500"
+                    />
+                    Video Call
+                  </label>
+                </div>
+              </fieldset>
 
               <button
                 type="submit"
