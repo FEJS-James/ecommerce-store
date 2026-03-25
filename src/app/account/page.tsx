@@ -1,10 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { Shield, Package, Download, Settings, ShoppingCart, FolderOpen, LogOut } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useCustomerAuth } from "@/hooks/useCustomerAuth";
+import {
+  Shield,
+  Package,
+  Download,
+  Settings,
+  ShoppingCart,
+  FolderOpen,
+  LogOut,
+} from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -35,17 +43,19 @@ interface DownloadItem {
   file_url: string | null;
 }
 
-type Tab = 'orders' | 'downloads' | 'settings';
+type Tab = "orders" | "downloads" | "settings";
 
 function formatPrice(cents: number): string {
   return `$${(Number(cents) / 100).toFixed(2)}`;
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z').toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return new Date(
+    dateStr.endsWith("Z") ? dateStr : dateStr + "Z",
+  ).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -53,25 +63,25 @@ export default function CustomerDashboard() {
   const { customer, checking } = useCustomerAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<Tab>('orders');
+  const [activeTab, setActiveTab] = useState<Tab>("orders");
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingDownloads, setLoadingDownloads] = useState(true);
 
   // Settings state
-  const [settingsName, setSettingsName] = useState('');
-  const [settingsEmail, setSettingsEmail] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [settingsMsg, setSettingsMsg] = useState('');
-  const [settingsError, setSettingsError] = useState('');
+  const [settingsName, setSettingsName] = useState("");
+  const [settingsEmail, setSettingsEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [settingsMsg, setSettingsMsg] = useState("");
+  const [settingsError, setSettingsError] = useState("");
   const [settingsLoading, setSettingsLoading] = useState(false);
 
   useEffect(() => {
     if (!customer) return;
-    fetch('/api/account/orders')
+    fetch("/api/account/orders")
       .then((res) => res.json())
       .then((data) => setOrders(Array.isArray(data.orders) ? data.orders : []))
       .catch(() => {})
@@ -80,39 +90,41 @@ export default function CustomerDashboard() {
 
   useEffect(() => {
     if (!customer) return;
-    fetch('/api/account/downloads')
+    fetch("/api/account/downloads")
       .then((res) => res.json())
-      .then((data) => setDownloads(Array.isArray(data.downloads) ? data.downloads : []))
+      .then((data) =>
+        setDownloads(Array.isArray(data.downloads) ? data.downloads : []),
+      )
       .catch(() => {})
       .finally(() => setLoadingDownloads(false));
   }, [customer]);
 
   useEffect(() => {
     if (customer) {
-      setSettingsName(customer.name || '');
-      setSettingsEmail(customer.email || '');
+      setSettingsName(customer.name || "");
+      setSettingsEmail(customer.email || "");
     }
   }, [customer]);
 
   async function handleUpdateName(e: React.FormEvent) {
     e.preventDefault();
     setSettingsLoading(true);
-    setSettingsMsg('');
-    setSettingsError('');
+    setSettingsMsg("");
+    setSettingsError("");
     try {
-      const res = await fetch('/api/account/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update_name', name: settingsName }),
+      const res = await fetch("/api/account/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update_name", name: settingsName }),
       });
       const data = await res.json();
       if (res.ok) {
-        setSettingsMsg('Name updated successfully');
+        setSettingsMsg("Name updated successfully");
       } else {
-        setSettingsError(data.error || 'Failed to update name');
+        setSettingsError(data.error || "Failed to update name");
       }
     } catch {
-      setSettingsError('Network error');
+      setSettingsError("Network error");
     } finally {
       setSettingsLoading(false);
     }
@@ -121,22 +133,22 @@ export default function CustomerDashboard() {
   async function handleUpdateEmail(e: React.FormEvent) {
     e.preventDefault();
     setSettingsLoading(true);
-    setSettingsMsg('');
-    setSettingsError('');
+    setSettingsMsg("");
+    setSettingsError("");
     try {
-      const res = await fetch('/api/account/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update_email', email: settingsEmail }),
+      const res = await fetch("/api/account/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update_email", email: settingsEmail }),
       });
       const data = await res.json();
       if (res.ok) {
-        setSettingsMsg('Email updated successfully');
+        setSettingsMsg("Email updated successfully");
       } else {
-        setSettingsError(data.error || 'Failed to update email');
+        setSettingsError(data.error || "Failed to update email");
       }
     } catch {
-      setSettingsError('Network error');
+      setSettingsError("Network error");
     } finally {
       setSettingsLoading(false);
     }
@@ -145,46 +157,53 @@ export default function CustomerDashboard() {
   async function handleUpdatePassword(e: React.FormEvent) {
     e.preventDefault();
     setSettingsLoading(true);
-    setSettingsMsg('');
-    setSettingsError('');
+    setSettingsMsg("");
+    setSettingsError("");
 
     if (newPassword !== confirmNewPassword) {
-      setSettingsError('Passwords do not match');
+      setSettingsError("Passwords do not match");
       setSettingsLoading(false);
       return;
     }
 
     try {
-      const res = await fetch('/api/account/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update_password', currentPassword, newPassword }),
+      const res = await fetch("/api/account/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_password",
+          currentPassword,
+          newPassword,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
-        setSettingsMsg('Password updated successfully');
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmNewPassword('');
+        setSettingsMsg("Password updated successfully");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
       } else {
-        setSettingsError(data.error || 'Failed to update password');
+        setSettingsError(data.error || "Failed to update password");
       }
     } catch {
-      setSettingsError('Network error');
+      setSettingsError("Network error");
     } finally {
       setSettingsLoading(false);
     }
   }
 
   async function handleLogout() {
-    await fetch('/api/account/logout', { method: 'POST' });
-    router.push('/account/login');
+    await fetch("/api/account/logout", { method: "POST" });
+    router.push("/account/login");
     router.refresh();
   }
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0A0A0F' }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#0A0A0F" }}
+      >
         <div className="space-y-4 text-center">
           <div className="h-8 w-48 shimmer rounded mx-auto" />
           <div className="h-4 w-32 shimmer rounded mx-auto" />
@@ -195,16 +214,23 @@ export default function CustomerDashboard() {
 
   if (!customer) return null;
 
-  const tabs: { id: Tab; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'orders', label: 'Orders', Icon: Package },
-    { id: 'downloads', label: 'Downloads', Icon: Download },
-    { id: 'settings', label: 'Settings', Icon: Settings },
+  const tabs: {
+    id: Tab;
+    label: string;
+    Icon: React.ComponentType<{ className?: string }>;
+  }[] = [
+    { id: "orders", label: "Orders", Icon: Package },
+    { id: "downloads", label: "Downloads", Icon: Download },
+    { id: "settings", label: "Settings", Icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: '#0A0A0F' }}>
+    <div className="min-h-screen" style={{ background: "#0A0A0F" }}>
       {/* Header */}
-      <div className="border-b border-white/[0.06]" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+      <div
+        className="border-b border-white/[0.06]"
+        style={{ background: "rgba(255, 255, 255, 0.02)" }}
+      >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/">
@@ -241,13 +267,13 @@ export default function CustomerDashboard() {
               key={tab.id}
               onClick={() => {
                 setActiveTab(tab.id);
-                setSettingsMsg('');
-                setSettingsError('');
+                setSettingsMsg("");
+                setSettingsError("");
               }}
               className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 focus-glow ${
                 activeTab === tab.id
-                  ? 'bg-white/[0.1] text-white shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? "bg-white/[0.1] text-white shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
               <tab.Icon className="w-4 h-4" aria-hidden="true" />
@@ -257,9 +283,11 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Orders Tab */}
-        {activeTab === 'orders' && (
+        {activeTab === "orders" && (
           <div>
-            <h2 className="text-lg font-semibold text-white mb-4">Purchase History</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">
+              Purchase History
+            </h2>
             {loadingOrders ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -271,7 +299,10 @@ export default function CustomerDashboard() {
               </div>
             ) : orders.length === 0 ? (
               <div className="glass rounded-2xl p-12 text-center">
-                <ShoppingCart className="w-10 h-10 text-zinc-600 mx-auto mb-4" aria-hidden="true" />
+                <ShoppingCart
+                  className="w-10 h-10 text-zinc-600 mx-auto mb-4"
+                  aria-hidden="true"
+                />
                 <p className="text-zinc-500 mb-4">No orders yet</p>
                 <Link
                   href="/products"
@@ -296,36 +327,42 @@ export default function CustomerDashboard() {
                         )}
                         <div>
                           <h3 className="font-semibold text-white">
-                            {order.product_name || 'Digital Product'}
+                            {order.product_name || "Digital Product"}
                           </h3>
                           <p className="text-sm text-zinc-500 mt-1">
-                            {formatDate(order.created_at)} · {formatPrice(order.amount_cents)}
+                            {formatDate(order.created_at)} ·{" "}
+                            {formatPrice(order.amount_cents)}
                           </p>
                           <span
                             className={`inline-flex items-center gap-1 text-xs mt-2 px-2 py-0.5 rounded-full ${
-                              order.status === 'completed'
-                                ? 'bg-emerald-500/10 text-emerald-400'
-                                : 'bg-amber-500/10 text-amber-400'
+                              order.status === "completed"
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "bg-amber-500/10 text-amber-400"
                             }`}
                           >
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${
-                                order.status === 'completed' ? 'bg-emerald-400' : 'bg-amber-400'
+                                order.status === "completed"
+                                  ? "bg-emerald-400"
+                                  : "bg-amber-400"
                               }`}
                             />
-                            {order.status === 'completed' ? 'Completed' : order.status}
+                            {order.status === "completed"
+                              ? "Completed"
+                              : order.status}
                           </span>
                         </div>
                       </div>
-                      {order.download_token && order.download_count < order.max_downloads && (
-                        <a
-                          href={`/api/download/${order.download_token}`}
-                          className="flex-shrink-0 btn-gradient px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 focus-glow"
-                        >
-                          <Download className="w-4 h-4" aria-hidden="true" />
-                          Download
-                        </a>
-                      )}
+                      {order.download_token &&
+                        order.download_count < order.max_downloads && (
+                          <a
+                            href={`/api/download/${order.download_token}`}
+                            className="flex-shrink-0 btn-gradient px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 focus-glow"
+                          >
+                            <Download className="w-4 h-4" aria-hidden="true" />
+                            Download
+                          </a>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -335,9 +372,11 @@ export default function CustomerDashboard() {
         )}
 
         {/* Downloads Tab */}
-        {activeTab === 'downloads' && (
+        {activeTab === "downloads" && (
           <div>
-            <h2 className="text-lg font-semibold text-white mb-4">Download Library</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">
+              Download Library
+            </h2>
             {loadingDownloads ? (
               <div className="space-y-4">
                 {[1, 2].map((i) => (
@@ -349,7 +388,10 @@ export default function CustomerDashboard() {
               </div>
             ) : downloads.length === 0 ? (
               <div className="glass rounded-2xl p-12 text-center">
-                <FolderOpen className="w-10 h-10 text-zinc-600 mx-auto mb-4" aria-hidden="true" />
+                <FolderOpen
+                  className="w-10 h-10 text-zinc-600 mx-auto mb-4"
+                  aria-hidden="true"
+                />
                 <p className="text-zinc-500 mb-4">No downloads available</p>
                 <Link
                   href="/products"
@@ -361,7 +403,9 @@ export default function CustomerDashboard() {
             ) : (
               <div className="space-y-4">
                 {downloads.map((dl) => {
-                  const expired = dl.token_expires_at && new Date(String(dl.token_expires_at)) < new Date();
+                  const expired =
+                    dl.token_expires_at &&
+                    new Date(String(dl.token_expires_at)) < new Date();
                   const limitReached = dl.download_count >= dl.max_downloads;
                   const canDownload = !expired && !limitReached && dl.file_url;
 
@@ -378,12 +422,15 @@ export default function CustomerDashboard() {
                             />
                           )}
                           <div>
-                            <h3 className="font-semibold text-white">{dl.product_name}</h3>
+                            <h3 className="font-semibold text-white">
+                              {dl.product_name}
+                            </h3>
                             <p className="text-sm text-zinc-500 mt-1">
                               Purchased {formatDate(dl.order_created_at)}
                             </p>
                             <p className="text-xs text-zinc-600 mt-1">
-                              Downloads: {dl.download_count} / {dl.max_downloads}
+                              Downloads: {dl.download_count} /{" "}
+                              {dl.max_downloads}
                             </p>
                           </div>
                         </div>
@@ -393,15 +440,24 @@ export default function CustomerDashboard() {
                               href={`/api/download/${dl.download_token}`}
                               className="btn-gradient px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 focus-glow"
                             >
-                              <Download className="w-4 h-4" aria-hidden="true" />
+                              <Download
+                                className="w-4 h-4"
+                                aria-hidden="true"
+                              />
                               Download
                             </a>
                           ) : !dl.file_url ? (
-                            <span className="text-sm text-zinc-600">File not available yet</span>
+                            <span className="text-sm text-zinc-600">
+                              File not available yet
+                            </span>
                           ) : expired ? (
-                            <span className="text-sm text-red-400">Link expired</span>
+                            <span className="text-sm text-red-400">
+                              Link expired
+                            </span>
                           ) : (
-                            <span className="text-sm text-red-400">Download limit reached</span>
+                            <span className="text-sm text-red-400">
+                              Download limit reached
+                            </span>
                           )}
                         </div>
                       </div>
@@ -414,9 +470,11 @@ export default function CustomerDashboard() {
         )}
 
         {/* Settings Tab */}
-        {activeTab === 'settings' && (
+        {activeTab === "settings" && (
           <div className="space-y-8">
-            <h2 className="text-lg font-semibold text-white">Account Settings</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Account Settings
+            </h2>
 
             {settingsMsg && (
               <div className="glass p-4 rounded-xl text-sm border border-emerald-500/20 text-emerald-400">

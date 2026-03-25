@@ -37,7 +37,8 @@ export default function GeoPrice({
 
   // Coerce to number — SQLite may return strings for INTEGER columns
   const safePriceCents = Number(priceCents);
-  const safeCompareCents = comparePriceCents != null ? Number(comparePriceCents) : null;
+  const safeCompareCents =
+    comparePriceCents != null ? Number(comparePriceCents) : null;
 
   // Convert base price to visitor currency
   const convertedCents = convertCents(safePriceCents, currency);

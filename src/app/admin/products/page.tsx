@@ -1,14 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import Link from 'next/link';
-import AdminSidebar from '@/components/AdminSidebar';
-import { formatPrice, CATEGORIES } from '@/lib/utils';
-import type { Product } from '@/lib/types';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Search, Plus, Pencil, Trash2, RotateCcw, AlertTriangle, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
+import AdminSidebar from "@/components/AdminSidebar";
+import { formatPrice, CATEGORIES } from "@/lib/utils";
+import type { Product } from "@/lib/types";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import {
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  RotateCcw,
+  AlertTriangle,
+  X,
+} from "lucide-react";
 
-type FilterTab = 'default' | 'active' | 'draft' | 'archived' | 'all';
+type FilterTab = "default" | "active" | "draft" | "archived" | "all";
 
 function DeleteConfirmationModal({
   productNames,
@@ -19,15 +27,15 @@ function DeleteConfirmationModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const [confirmText, setConfirmText] = useState('');
+  const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === "Escape") onCancel();
     };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, [onCancel]);
 
   async function handleConfirm() {
@@ -65,9 +73,9 @@ function DeleteConfirmationModal({
         </div>
 
         <p className="text-sm text-text-secondary mb-3">
-          This action <strong className="text-red-400">cannot be undone</strong>.
-          The following {productNames.length === 1 ? 'product' : 'products'} will
-          be permanently removed:
+          This action <strong className="text-red-400">cannot be undone</strong>
+          . The following {productNames.length === 1 ? "product" : "products"}{" "}
+          will be permanently removed:
         </p>
 
         <ul className="mb-4 max-h-32 overflow-y-auto space-y-1">
@@ -102,10 +110,10 @@ function DeleteConfirmationModal({
           </button>
           <button
             onClick={handleConfirm}
-            disabled={confirmText !== 'DELETE' || deleting}
+            disabled={confirmText !== "DELETE" || deleting}
             className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {deleting ? 'Deleting…' : 'Delete Permanently'}
+            {deleting ? "Deleting…" : "Delete Permanently"}
           </button>
         </div>
       </div>
@@ -117,10 +125,10 @@ export default function AdminProductsPage() {
   const { authenticated, checking } = useAdminAuth();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterTab>('default');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [filter, setFilter] = useState<FilterTab>("default");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteModalProducts, setDeleteModalProducts] = useState<
     { id: string; name: string }[] | null
@@ -134,8 +142,8 @@ export default function AdminProductsPage() {
   const loadProducts = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (categoryFilter) params.set('category', categoryFilter);
-    if (debouncedSearch) params.set('search', debouncedSearch);
+    if (categoryFilter) params.set("category", categoryFilter);
+    if (debouncedSearch) params.set("search", debouncedSearch);
     const res = await fetch(`/api/admin/products?${params}`);
     const data = await res.json();
     setAllProducts(Array.isArray(data.products) ? data.products : []);
@@ -152,13 +160,13 @@ export default function AdminProductsPage() {
     const c = { active: 0, draft: 0, archived: 0, all: 0, default: 0 };
     for (const p of allProducts) {
       c.all++;
-      if (p.status === 'active') {
+      if (p.status === "active") {
         c.active++;
         c.default++;
-      } else if (p.status === 'draft') {
+      } else if (p.status === "draft") {
         c.draft++;
         c.default++;
-      } else if (p.status === 'archived') {
+      } else if (p.status === "archived") {
         c.archived++;
       }
     }
@@ -168,42 +176,42 @@ export default function AdminProductsPage() {
   // Filter products client-side based on active tab
   const products = useMemo(() => {
     switch (filter) {
-      case 'active':
-        return allProducts.filter((p) => p.status === 'active');
-      case 'draft':
-        return allProducts.filter((p) => p.status === 'draft');
-      case 'archived':
-        return allProducts.filter((p) => p.status === 'archived');
-      case 'all':
+      case "active":
+        return allProducts.filter((p) => p.status === "active");
+      case "draft":
+        return allProducts.filter((p) => p.status === "draft");
+      case "archived":
+        return allProducts.filter((p) => p.status === "archived");
+      case "all":
         return allProducts;
-      case 'default':
+      case "default":
       default:
-        return allProducts.filter((p) => p.status !== 'archived');
+        return allProducts.filter((p) => p.status !== "archived");
     }
   }, [allProducts, filter]);
 
-  const isArchivedTab = filter === 'archived';
+  const isArchivedTab = filter === "archived";
 
   async function handleStatusChange(id: string, newStatus: string) {
     try {
       await fetch(`/api/admin/products/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
       loadProducts();
     } catch {
-      alert('Action failed. Please try again.');
+      alert("Action failed. Please try again.");
     }
   }
 
   async function handleArchive(id: string) {
-    if (!confirm('Are you sure you want to archive this product?')) return;
+    if (!confirm("Are you sure you want to archive this product?")) return;
     try {
-      await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+      await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
       loadProducts();
     } catch {
-      alert('Action failed. Please try again.');
+      alert("Action failed. Please try again.");
     }
   }
 
@@ -216,13 +224,15 @@ export default function AdminProductsPage() {
     try {
       await Promise.all(
         deleteModalProducts.map((p) =>
-          fetch(`/api/admin/products/${p.id}/hard-delete`, { method: 'DELETE' })
-        )
+          fetch(`/api/admin/products/${p.id}/hard-delete`, {
+            method: "DELETE",
+          }),
+        ),
       );
       setDeleteModalProducts(null);
       loadProducts();
     } catch {
-      alert('Action failed. Please try again.');
+      alert("Action failed. Please try again.");
     }
   }
 
@@ -231,15 +241,15 @@ export default function AdminProductsPage() {
       await Promise.all(
         Array.from(selectedIds).map((id) =>
           fetch(`/api/admin/products/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'draft' }),
-          })
-        )
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "draft" }),
+          }),
+        ),
       );
       loadProducts();
     } catch {
-      alert('Action failed. Please try again.');
+      alert("Action failed. Please try again.");
     }
   }
 
@@ -269,7 +279,7 @@ export default function AdminProductsPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: '#0A0A0F' }}
+        style={{ backgroundColor: "#0A0A0F" }}
       >
         <div className="shimmer w-32 h-4 rounded" />
       </div>
@@ -277,15 +287,15 @@ export default function AdminProductsPage() {
   }
 
   const filterTabs: { key: FilterTab; label: string }[] = [
-    { key: 'default', label: 'Active + Draft' },
-    { key: 'active', label: 'Active' },
-    { key: 'draft', label: 'Draft' },
-    { key: 'archived', label: 'Archived' },
-    { key: 'all', label: 'All' },
+    { key: "default", label: "Active + Draft" },
+    { key: "active", label: "Active" },
+    { key: "draft", label: "Draft" },
+    { key: "archived", label: "Archived" },
+    { key: "all", label: "All" },
   ];
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#0A0A0F' }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: "#0A0A0F" }}>
       <AdminSidebar />
       <main className="flex-1 p-4 sm:p-8 overflow-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -307,11 +317,11 @@ export default function AdminProductsPage() {
               onClick={() => setFilter(tab.key)}
               className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border ${
                 filter === tab.key
-                  ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30 border-b-2 border-b-indigo-500'
-                  : 'bg-white/[0.05] text-text-secondary border-white/[0.08] hover:bg-white/[0.08]'
+                  ? "bg-indigo-500/15 text-indigo-400 border-indigo-500/30 border-b-2 border-b-indigo-500"
+                  : "bg-white/[0.05] text-text-secondary border-white/[0.08] hover:bg-white/[0.08]"
               }`}
             >
-              {tab.label}{' '}
+              {tab.label}{" "}
               <span className="opacity-70">({counts[tab.key]})</span>
             </button>
           ))}
@@ -348,8 +358,8 @@ export default function AdminProductsPage() {
             {(categoryFilter || searchQuery) && (
               <button
                 onClick={() => {
-                  setCategoryFilter('');
-                  setSearchQuery('');
+                  setCategoryFilter("");
+                  setSearchQuery("");
                 }}
                 className="text-sm text-text-secondary hover:text-text-primary px-3 py-2 transition-colors"
               >
@@ -483,7 +493,8 @@ export default function AdminProductsPage() {
                           {formatPrice(product.price_cents)}
                         </p>
                         {product.compare_price_cents &&
-                          Number(product.compare_price_cents) > Number(product.price_cents) && (
+                          Number(product.compare_price_cents) >
+                            Number(product.price_cents) && (
                             <p className="text-xs text-text-secondary line-through">
                               {formatPrice(product.compare_price_cents)}
                             </p>
@@ -502,11 +513,11 @@ export default function AdminProductsPage() {
                             handleStatusChange(product.id, e.target.value)
                           }
                           className={`text-xs px-2.5 py-1 rounded-full font-medium border-0 cursor-pointer appearance-none ${
-                            product.status === 'active'
-                              ? 'bg-emerald-500/15 text-emerald-400'
-                              : product.status === 'draft'
-                                ? 'bg-yellow-500/15 text-yellow-400'
-                                : 'bg-white/[0.08] text-text-secondary'
+                            product.status === "active"
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : product.status === "draft"
+                                ? "bg-yellow-500/15 text-yellow-400"
+                                : "bg-white/[0.08] text-text-secondary"
                           }`}
                         >
                           <option value="active">Active</option>
@@ -528,11 +539,11 @@ export default function AdminProductsPage() {
                           >
                             <Pencil className="w-4 h-4" aria-hidden="true" />
                           </Link>
-                          {product.status === 'archived' ? (
+                          {product.status === "archived" ? (
                             <>
                               <button
                                 onClick={() =>
-                                  handleStatusChange(product.id, 'draft')
+                                  handleStatusChange(product.id, "draft")
                                 }
                                 className="p-2 rounded-lg text-text-secondary hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
                                 title="Restore to Draft"
@@ -563,10 +574,7 @@ export default function AdminProductsPage() {
                               className="p-2 rounded-lg text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors"
                               title="Archive"
                             >
-                              <Trash2
-                                className="w-4 h-4"
-                                aria-hidden="true"
-                              />
+                              <Trash2 className="w-4 h-4" aria-hidden="true" />
                             </button>
                           )}
                         </div>

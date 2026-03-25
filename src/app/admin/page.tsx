@@ -1,7 +1,7 @@
-import AdminGuard from '@/components/AdminGuard';
-import { queryOne, queryAll } from '@/lib/db';
-import { formatPrice, formatDateTime } from '@/lib/utils';
-import Link from 'next/link';
+import AdminGuard from "@/components/AdminGuard";
+import { queryOne, queryAll } from "@/lib/db";
+import { formatPrice, formatDateTime } from "@/lib/utils";
+import Link from "next/link";
 import {
   CreditCard,
   Coins,
@@ -11,9 +11,9 @@ import {
   ShoppingCart,
   Users,
   BarChart3,
-} from 'lucide-react';
+} from "lucide-react";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface DailyRow {
   date: string;
@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
   const totalCustomers =
     (
       await queryOne<{ count: number }>(
-        'SELECT COUNT(*) as count FROM customers'
+        "SELECT COUNT(*) as count FROM customers",
       )
     )?.count ?? 0;
 
@@ -124,7 +124,10 @@ export default async function AdminDashboardPage() {
     ORDER BY revenue DESC
   `);
 
-  function calcChange(current: number, previous: number): { pct: number; up: boolean } {
+  function calcChange(
+    current: number,
+    previous: number,
+  ): { pct: number; up: boolean } {
     if (previous === 0) return { pct: current > 0 ? 100 : 0, up: current >= 0 };
     const pct = Math.round(((current - previous) / previous) * 100);
     return { pct: Math.abs(pct), up: pct >= 0 };
@@ -132,46 +135,53 @@ export default async function AdminDashboardPage() {
 
   const todayChange = calcChange(todayRevenue, yesterdayRevenue);
   const monthChange = calcChange(monthRevenue, prevMonthRevenue);
-  const ordersChange = calcChange(totalOrders, prevMonthOrders > 0 ? totalOrders + prevMonthOrders : 0);
+  const ordersChange = calcChange(
+    totalOrders,
+    prevMonthOrders > 0 ? totalOrders + prevMonthOrders : 0,
+  );
   const customersNewThisMonth =
     totalCustomers - (prevMonthCustomers > 0 ? prevMonthCustomers : 0);
 
   const maxTopRevenue = Math.max(
-    ...(Array.isArray(topProducts) ? topProducts.map((p) => Number(p.revenue)) : []),
-    1
+    ...(Array.isArray(topProducts)
+      ? topProducts.map((p) => Number(p.revenue))
+      : []),
+    1,
   );
 
   const maxDailyRevenue = Math.max(
-    ...(Array.isArray(dailyRevenue) ? dailyRevenue.map((d) => Number(d.revenue)) : []),
-    100
+    ...(Array.isArray(dailyRevenue)
+      ? dailyRevenue.map((d) => Number(d.revenue))
+      : []),
+    100,
   );
   const chartWidth = 800;
   const chartHeight = 200;
 
   const statCards = [
     {
-      label: 'Today Revenue',
+      label: "Today Revenue",
       value: formatPrice(todayRevenue),
       Icon: DollarSign,
       change: todayChange,
-      comparison: 'vs yesterday',
+      comparison: "vs yesterday",
     },
     {
-      label: 'Month Revenue',
+      label: "Month Revenue",
       value: formatPrice(monthRevenue),
       Icon: TrendingUp,
       change: monthChange,
-      comparison: 'vs prev 30d',
+      comparison: "vs prev 30d",
     },
     {
-      label: 'Total Orders',
+      label: "Total Orders",
       value: totalOrders.toLocaleString(),
       Icon: ShoppingCart,
       change: ordersChange,
-      comparison: 'all time',
+      comparison: "all time",
     },
     {
-      label: 'Total Customers',
+      label: "Total Customers",
       value: totalCustomers.toLocaleString(),
       Icon: Users,
       change: { pct: customersNewThisMonth, up: true },
@@ -191,17 +201,32 @@ export default async function AdminDashboardPage() {
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-text-secondary">{stat.label}</p>
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 flex items-center justify-center">
-                  <stat.Icon className="w-5 h-5 text-indigo-400" aria-hidden="true" />
+                  <stat.Icon
+                    className="w-5 h-5 text-indigo-400"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-text-primary mb-2">{stat.value}</p>
+              <p className="text-3xl font-bold text-text-primary mb-2">
+                {stat.value}
+              </p>
               <div className="flex items-center gap-1.5 text-sm">
                 {stat.change.up ? (
-                  <TrendingUp className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+                  <TrendingUp
+                    className="w-4 h-4 text-emerald-400"
+                    aria-hidden="true"
+                  />
                 ) : (
-                  <TrendingDown className="w-4 h-4 text-red-400" aria-hidden="true" />
+                  <TrendingDown
+                    className="w-4 h-4 text-red-400"
+                    aria-hidden="true"
+                  />
                 )}
-                <span className={stat.change.up ? 'text-emerald-400' : 'text-red-400'}>
+                <span
+                  className={
+                    stat.change.up ? "text-emerald-400" : "text-red-400"
+                  }
+                >
                   {stat.change.pct}%
                 </span>
                 <span className="text-text-secondary">{stat.comparison}</span>
@@ -215,7 +240,9 @@ export default async function AdminDashboardPage() {
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 className="w-5 h-5 text-indigo-400" aria-hidden="true" />
             <h2 className="font-semibold text-text-primary">Revenue Trend</h2>
-            <span className="text-xs text-text-secondary ml-auto">Last 30 days</span>
+            <span className="text-xs text-text-secondary ml-auto">
+              Last 30 days
+            </span>
           </div>
           {Array.isArray(dailyRevenue) && dailyRevenue.length > 0 ? (
             <svg
@@ -244,9 +271,10 @@ export default async function AdminDashboardPage() {
               {dailyRevenue.map((day, i) => {
                 const barWidth = Math.max(
                   chartWidth / Math.max(dailyRevenue.length, 1) - 4,
-                  2
+                  2,
                 );
-                const barHeight = (Number(day.revenue) / maxDailyRevenue) * chartHeight;
+                const barHeight =
+                  (Number(day.revenue) / maxDailyRevenue) * chartHeight;
                 const x = i * (chartWidth / dailyRevenue.length) + 2;
                 return (
                   <rect
@@ -278,25 +306,25 @@ export default async function AdminDashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {revenueByMethod.map((method) => {
                 const label =
-                  method.payment_method === 'paypal'
-                    ? 'PayPal'
-                    : method.payment_method === 'crypto'
-                      ? 'Crypto'
-                      : 'Stripe';
+                  method.payment_method === "paypal"
+                    ? "PayPal"
+                    : method.payment_method === "crypto"
+                      ? "Crypto"
+                      : "Stripe";
                 const IconComponent =
-                  method.payment_method === 'crypto' ? Coins : CreditCard;
+                  method.payment_method === "crypto" ? Coins : CreditCard;
                 const accentColor =
-                  method.payment_method === 'paypal'
-                    ? 'from-blue-500/20 to-blue-600/10 text-blue-400'
-                    : method.payment_method === 'crypto'
-                      ? 'from-orange-500/20 to-amber-600/10 text-orange-400'
-                      : 'from-violet-500/20 to-indigo-600/10 text-violet-400';
+                  method.payment_method === "paypal"
+                    ? "from-blue-500/20 to-blue-600/10 text-blue-400"
+                    : method.payment_method === "crypto"
+                      ? "from-orange-500/20 to-amber-600/10 text-orange-400"
+                      : "from-violet-500/20 to-indigo-600/10 text-violet-400";
 
                 return (
                   <div
                     key={method.payment_method}
                     className="glass p-4"
-                    style={{ borderRadius: '12px' }}
+                    style={{ borderRadius: "12px" }}
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <div
@@ -312,7 +340,7 @@ export default async function AdminDashboardPage() {
                       {formatPrice(method.revenue)}
                     </p>
                     <p className="text-xs text-text-secondary mt-1">
-                      {method.count} order{method.count !== 1 ? 's' : ''}
+                      {method.count} order{method.count !== 1 ? "s" : ""}
                     </p>
                   </div>
                 );
@@ -337,7 +365,7 @@ export default async function AdminDashboardPage() {
               <div className="space-y-1">
                 {recentOrders.map((order) => {
                   const PayIcon =
-                    order.payment_method === 'crypto' ? Coins : CreditCard;
+                    order.payment_method === "crypto" ? Coins : CreditCard;
                   return (
                     <Link
                       key={order.id}
@@ -350,7 +378,7 @@ export default async function AdminDashboardPage() {
                         </p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-xs text-text-secondary truncate">
-                            {order.product_name || 'Unknown'}
+                            {order.product_name || "Unknown"}
                           </span>
                           <PayIcon
                             className="w-3 h-3 text-text-secondary flex-shrink-0"
@@ -367,11 +395,11 @@ export default async function AdminDashboardPage() {
                         </span>
                         <span
                           className={`block text-xs px-2 py-0.5 rounded-full mt-1 font-medium ${
-                            order.status === 'completed'
-                              ? 'bg-emerald-500/15 text-emerald-400'
-                              : order.status === 'refunded'
-                                ? 'bg-red-500/15 text-red-400'
-                                : 'bg-white/[0.08] text-text-secondary'
+                            order.status === "completed"
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : order.status === "refunded"
+                                ? "bg-red-500/15 text-red-400"
+                                : "bg-white/[0.08] text-text-secondary"
                           }`}
                         >
                           {order.status}
