@@ -1,22 +1,118 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/AdminSidebar';
 import { formatPrice, CATEGORIES } from '@/lib/utils';
 import type { Product } from '@/lib/types';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, RotateCcw, AlertTriangle, X } from 'lucide-react';
+
+type FilterTab = 'default' | 'active' | 'draft' | 'archived' | 'all';
+
+function DeleteConfirmationModal({
+  productNames,
+  onConfirm,
+  onCancel,
+}: {
+  productNames: string[];
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleConfirm() {
+    setDeleting(true);
+    await onConfirm();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Modal */}
+      <div className="relative w-full max-w-md glass border border-white/[0.08] rounded-2xl p-6 shadow-2xl">
+        <button
+          onClick={onCancel}
+          className="absolute top-4 right-4 p-1 rounded-lg text-text-secondary hover:text-text-primary transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-xl bg-red-500/15">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-text-primary">
+            Permanent Delete
+          </h3>
+        </div>
+
+        <p className="text-sm text-text-secondary mb-3">
+          This action <strong className="text-red-400">cannot be undone</strong>.
+          The following {productNames.length === 1 ? 'product' : 'products'} will
+          be permanently removed:
+        </p>
+
+        <ul className="mb-4 max-h-32 overflow-y-auto space-y-1">
+          {productNames.map((name, i) => (
+            <li
+              key={i}
+              className="text-sm text-text-primary bg-white/[0.05] px-3 py-1.5 rounded-lg truncate"
+            >
+              {name}
+            </li>
+          ))}
+        </ul>
+
+        <label className="block text-sm text-text-secondary mb-2">
+          Type <strong className="text-text-primary">DELETE</strong> to confirm:
+        </label>
+        <input
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="DELETE"
+          className="glass-input w-full px-3 py-2 rounded-xl text-sm mb-4"
+          autoFocus
+        />
+
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary bg-white/[0.05] hover:bg-white/[0.08] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={confirmText !== 'DELETE' || deleting}
+            className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {deleting ? 'Deleting…' : 'Delete Permanently'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminProductsPage() {
   const { authenticated, checking } = useAdminAuth();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [filter, setFilter] = useState<FilterTab>('default');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteModalProducts, setDeleteModalProducts] = useState<
+    { id: string; name: string }[] | null
+  >(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
@@ -26,19 +122,55 @@ export default function AdminProductsPage() {
   const loadProducts = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (statusFilter) params.set('status', statusFilter);
     if (categoryFilter) params.set('category', categoryFilter);
     if (debouncedSearch) params.set('search', debouncedSearch);
     const res = await fetch(`/api/admin/products?${params}`);
     const data = await res.json();
-    setProducts(Array.isArray(data.products) ? data.products : []);
+    setAllProducts(Array.isArray(data.products) ? data.products : []);
     setSelectedIds(new Set());
     setLoading(false);
-  }, [statusFilter, categoryFilter, debouncedSearch]);
+  }, [categoryFilter, debouncedSearch]);
 
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  // Compute counts from all products
+  const counts = useMemo(() => {
+    const c = { active: 0, draft: 0, archived: 0, all: 0, default: 0 };
+    for (const p of allProducts) {
+      c.all++;
+      if (p.status === 'active') {
+        c.active++;
+        c.default++;
+      } else if (p.status === 'draft') {
+        c.draft++;
+        c.default++;
+      } else if (p.status === 'archived') {
+        c.archived++;
+      }
+    }
+    return c;
+  }, [allProducts]);
+
+  // Filter products client-side based on active tab
+  const products = useMemo(() => {
+    switch (filter) {
+      case 'active':
+        return allProducts.filter((p) => p.status === 'active');
+      case 'draft':
+        return allProducts.filter((p) => p.status === 'draft');
+      case 'archived':
+        return allProducts.filter((p) => p.status === 'archived');
+      case 'all':
+        return allProducts;
+      case 'default':
+      default:
+        return allProducts.filter((p) => p.status !== 'archived');
+    }
+  }, [allProducts, filter]);
+
+  const isArchivedTab = filter === 'archived';
 
   async function handleStatusChange(id: string, newStatus: string) {
     await fetch(`/api/admin/products/${id}/status`, {
@@ -49,9 +181,37 @@ export default function AdminProductsPage() {
     loadProducts();
   }
 
-  async function handleDelete(id: string) {
+  async function handleArchive(id: string) {
     if (!confirm('Are you sure you want to archive this product?')) return;
     await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+    loadProducts();
+  }
+
+  function openDeleteModal(productsToDelete: { id: string; name: string }[]) {
+    setDeleteModalProducts(productsToDelete);
+  }
+
+  async function handlePermanentDelete() {
+    if (!deleteModalProducts) return;
+    await Promise.all(
+      deleteModalProducts.map((p) =>
+        fetch(`/api/admin/products/${p.id}/hard-delete`, { method: 'DELETE' })
+      )
+    );
+    setDeleteModalProducts(null);
+    loadProducts();
+  }
+
+  async function handleBulkRestore() {
+    await Promise.all(
+      Array.from(selectedIds).map((id) =>
+        fetch(`/api/admin/products/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'draft' }),
+        })
+      )
+    );
     loadProducts();
   }
 
@@ -72,6 +232,11 @@ export default function AdminProductsPage() {
     }
   }
 
+  // Clear selection when switching tabs
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [filter]);
+
   if (checking || !authenticated) {
     return (
       <div
@@ -83,11 +248,12 @@ export default function AdminProductsPage() {
     );
   }
 
-  const statusFilters = [
-    { value: '', label: 'All' },
-    { value: 'active', label: 'Active' },
-    { value: 'draft', label: 'Draft' },
-    { value: 'archived', label: 'Archived' },
+  const filterTabs: { key: FilterTab; label: string }[] = [
+    { key: 'default', label: 'Active + Draft' },
+    { key: 'active', label: 'Active' },
+    { key: 'draft', label: 'Draft' },
+    { key: 'archived', label: 'Archived' },
+    { key: 'all', label: 'All' },
   ];
 
   return (
@@ -105,7 +271,25 @@ export default function AdminProductsPage() {
           </Link>
         </div>
 
-        {/* Search & Filters */}
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+          {filterTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
+              className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border ${
+                filter === tab.key
+                  ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30 border-b-2 border-b-indigo-500'
+                  : 'bg-white/[0.05] text-text-secondary border-white/[0.08] hover:bg-white/[0.08]'
+              }`}
+            >
+              {tab.label}{' '}
+              <span className="opacity-70">({counts[tab.key]})</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Search & Category Filter */}
         <div className="glass p-4 mb-6">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-[200px] relative">
@@ -121,21 +305,6 @@ export default function AdminProductsPage() {
                 className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm"
               />
             </div>
-            <div className="flex gap-2 flex-wrap">
-              {statusFilters.map((sf) => (
-                <button
-                  key={sf.value}
-                  onClick={() => setStatusFilter(sf.value)}
-                  className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                    statusFilter === sf.value
-                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                      : 'bg-white/[0.05] text-text-secondary border border-white/[0.08] hover:bg-white/[0.08]'
-                  }`}
-                >
-                  {sf.label}
-                </button>
-              ))}
-            </div>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -148,10 +317,9 @@ export default function AdminProductsPage() {
                 </option>
               ))}
             </select>
-            {(statusFilter || categoryFilter || searchQuery) && (
+            {(categoryFilter || searchQuery) && (
               <button
                 onClick={() => {
-                  setStatusFilter('');
                   setCategoryFilter('');
                   setSearchQuery('');
                 }}
@@ -162,6 +330,36 @@ export default function AdminProductsPage() {
             )}
           </div>
         </div>
+
+        {/* Bulk Action Bar (Archived tab only) */}
+        {isArchivedTab && selectedIds.size > 0 && (
+          <div className="glass border border-indigo-500/20 p-3 mb-4 flex items-center justify-between gap-4 rounded-xl">
+            <span className="text-sm text-text-primary font-medium">
+              {selectedIds.size} selected
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={handleBulkRestore}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Restore to Draft
+              </button>
+              <button
+                onClick={() => {
+                  const toDelete = products
+                    .filter((p) => selectedIds.has(p.id))
+                    .map((p) => ({ id: p.id, name: p.name }));
+                  openDeleteModal(toDelete);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete Permanently
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Table */}
         {loading ? (
@@ -178,14 +376,19 @@ export default function AdminProductsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/[0.08]">
-                    <th className="text-left px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.size === products.length && products.length > 0}
-                        onChange={toggleSelectAll}
-                        className="rounded border-white/20 bg-white/[0.05]"
-                      />
-                    </th>
+                    {isArchivedTab && (
+                      <th className="text-left px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedIds.size === products.length &&
+                            products.length > 0
+                          }
+                          onChange={toggleSelectAll}
+                          className="rounded border-white/20 bg-white/[0.05]"
+                        />
+                      </th>
+                    )}
                     <th className="text-left px-4 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
                       Product
                     </th>
@@ -212,14 +415,16 @@ export default function AdminProductsPage() {
                       key={product.id}
                       className="hover:bg-white/[0.03] transition-colors"
                     >
-                      <td className="px-4 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(product.id)}
-                          onChange={() => toggleSelect(product.id)}
-                          className="rounded border-white/20 bg-white/[0.05]"
-                        />
-                      </td>
+                      {isArchivedTab && (
+                        <td className="px-4 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(product.id)}
+                            onChange={() => toggleSelect(product.id)}
+                            className="rounded border-white/20 bg-white/[0.05]"
+                          />
+                        </td>
+                      )}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           {product.thumbnail_url ? (
@@ -295,13 +500,47 @@ export default function AdminProductsPage() {
                           >
                             <Pencil className="w-4 h-4" aria-hidden="true" />
                           </Link>
-                          <button
-                            onClick={() => handleDelete(product.id)}
-                            className="p-2 rounded-lg text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" aria-hidden="true" />
-                          </button>
+                          {product.status === 'archived' ? (
+                            <>
+                              <button
+                                onClick={() =>
+                                  handleStatusChange(product.id, 'draft')
+                                }
+                                className="p-2 rounded-lg text-text-secondary hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                                title="Restore to Draft"
+                              >
+                                <RotateCcw
+                                  className="w-4 h-4"
+                                  aria-hidden="true"
+                                />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  openDeleteModal([
+                                    { id: product.id, name: product.name },
+                                  ])
+                                }
+                                className="p-2 rounded-lg text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                title="Delete Permanently"
+                              >
+                                <Trash2
+                                  className="w-4 h-4"
+                                  aria-hidden="true"
+                                />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handleArchive(product.id)}
+                              className="p-2 rounded-lg text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              title="Archive"
+                            >
+                              <Trash2
+                                className="w-4 h-4"
+                                aria-hidden="true"
+                              />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -310,6 +549,15 @@ export default function AdminProductsPage() {
               </table>
             </div>
           </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteModalProducts && (
+          <DeleteConfirmationModal
+            productNames={deleteModalProducts.map((p) => p.name)}
+            onConfirm={handlePermanentDelete}
+            onCancel={() => setDeleteModalProducts(null)}
+          />
         )}
       </main>
     </div>
