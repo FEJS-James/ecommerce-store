@@ -25,7 +25,7 @@ export default function Header() {
   }, [mobileMenuOpen]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06]" style={{ background: 'rgba(10, 10, 15, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+    <header className="glass !rounded-none !border-x-0 !border-t-0 !bg-[rgba(10,10,15,0.8)] sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2.5 font-bold text-xl text-white group">
@@ -60,6 +60,7 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-nav-panel"
             >
               {mobileMenuOpen ? (
                 <X className="w-6 h-6" aria-hidden="true" />
@@ -83,7 +84,8 @@ export default function Header() {
 
           {/* Panel */}
           <div
-            className="fixed top-0 right-0 h-full w-72 z-50 md:hidden glass border-l border-white/[0.08] p-6 flex flex-col"
+            id="mobile-nav-panel"
+            className="fixed top-0 right-0 h-full w-72 z-50 md:hidden glass !rounded-none border-l border-white/[0.08] p-6 flex flex-col"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
 import { slugify, CATEGORIES, formatPrice } from '@/lib/utils';
 import type { Product } from '@/lib/types';
 
@@ -214,7 +215,7 @@ export default function ProductForm({ product, stats }: ProductFormProps) {
                 {previewImages.map((url, i) => (
                   <div key={i} className="relative group rounded-lg overflow-hidden border border-gray-200">
                     <img src={url} alt={`Preview ${i + 1}`} className="w-full h-24 object-cover" />
-                    <button type="button" onClick={() => handlePreviewDelete(url)} className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Remove">✕</button>
+                    <button type="button" onClick={() => handlePreviewDelete(url)} className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Remove"><X className="w-3 h-3" aria-hidden="true" /></button>
                   </div>
                 ))}
               </div>
