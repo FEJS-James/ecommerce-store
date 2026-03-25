@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const orderId = uuidv4().replace(/-/g, '');
 
     const invoice = await createBTCPayInvoice({
-      amount: product.price_cents,
+      amount: Number(product.price_cents),
       productId: product.id,
       productName: product.name,
       customerEmail: customerEmail || '',

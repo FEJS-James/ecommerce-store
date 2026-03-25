@@ -26,9 +26,9 @@ export default function ProductsGrid({ products, initialCategory }: ProductsGrid
   const sorted = [...filtered].sort((a, b) => {
     switch (sort) {
       case 'price-low':
-        return (a.price_cents ?? 0) - (b.price_cents ?? 0);
+        return Number(a.price_cents ?? 0) - Number(b.price_cents ?? 0);
       case 'price-high':
-        return (b.price_cents ?? 0) - (a.price_cents ?? 0);
+        return Number(b.price_cents ?? 0) - Number(a.price_cents ?? 0);
       case 'newest':
         return safeDate(b.created_at).getTime() - safeDate(a.created_at).getTime();
       case 'featured':

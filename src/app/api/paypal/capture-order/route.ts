@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const capturedAmount = capture.purchase_units?.[0]?.payments?.captures?.[0];
     const amountCents = capturedAmount
       ? Math.round(parseFloat(capturedAmount.amount.value) * 100)
-      : product.price_cents;
+      : Number(product.price_cents);
 
     // Generate download token
     const downloadToken = crypto.randomBytes(32).toString('hex');

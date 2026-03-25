@@ -57,7 +57,7 @@ export async function createPayPalOrder(
   currency: string = "USD",
 ): Promise<PayPalOrderResponse> {
   const token = await getAccessToken();
-  const amountStr = (amountCents / 100).toFixed(2);
+  const amountStr = (Number(amountCents) / 100).toFixed(2);
 
   const res = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
     method: "POST",

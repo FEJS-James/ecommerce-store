@@ -137,12 +137,12 @@ export default async function AdminDashboardPage() {
     totalCustomers - (prevMonthCustomers > 0 ? prevMonthCustomers : 0);
 
   const maxTopRevenue = Math.max(
-    ...(Array.isArray(topProducts) ? topProducts.map((p) => p.revenue) : []),
+    ...(Array.isArray(topProducts) ? topProducts.map((p) => Number(p.revenue)) : []),
     1
   );
 
   const maxDailyRevenue = Math.max(
-    ...(Array.isArray(dailyRevenue) ? dailyRevenue.map((d) => d.revenue) : []),
+    ...(Array.isArray(dailyRevenue) ? dailyRevenue.map((d) => Number(d.revenue)) : []),
     100
   );
   const chartWidth = 800;
@@ -246,7 +246,7 @@ export default async function AdminDashboardPage() {
                   chartWidth / Math.max(dailyRevenue.length, 1) - 4,
                   2
                 );
-                const barHeight = (day.revenue / maxDailyRevenue) * chartHeight;
+                const barHeight = (Number(day.revenue) / maxDailyRevenue) * chartHeight;
                 const x = i * (chartWidth / dailyRevenue.length) + 2;
                 return (
                   <rect
@@ -396,7 +396,7 @@ export default async function AdminDashboardPage() {
                 {topProducts.map((product, index) => {
                   const barPct =
                     maxTopRevenue > 0
-                      ? (product.revenue / maxTopRevenue) * 100
+                      ? (Number(product.revenue) / maxTopRevenue) * 100
                       : 0;
                   return (
                     <div key={product.name}>

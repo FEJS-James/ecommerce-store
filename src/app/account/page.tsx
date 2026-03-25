@@ -38,7 +38,7 @@ interface DownloadItem {
 type Tab = 'orders' | 'downloads' | 'settings';
 
 function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `$${(Number(cents) / 100).toFixed(2)}`;
 }
 
 function formatDate(dateStr: string): string {

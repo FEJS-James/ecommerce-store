@@ -66,7 +66,7 @@ export async function POST(
     if (order.customer_id) {
       await execute(
         `UPDATE customers SET total_spent_cents = MAX(0, total_spent_cents - ?), order_count = MAX(order_count - 1, 0), updated_at = datetime('now') WHERE id = ?`,
-        [order.amount_cents, order.customer_id]
+        [Number(order.amount_cents), order.customer_id]
       );
     }
 

@@ -483,7 +483,7 @@ export default function AdminProductsPage() {
                           {formatPrice(product.price_cents)}
                         </p>
                         {product.compare_price_cents &&
-                          product.compare_price_cents > product.price_cents && (
+                          Number(product.compare_price_cents) > Number(product.price_cents) && (
                             <p className="text-xs text-text-secondary line-through">
                               {formatPrice(product.compare_price_cents)}
                             </p>

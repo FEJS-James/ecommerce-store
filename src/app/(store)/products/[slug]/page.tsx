@@ -210,7 +210,7 @@ export default async function ProductPage({ params }: PageProps) {
       ? formatFileSize(product.file_size_bytes)
       : null;
   const savingsText = product.compare_price_cents
-    ? `Save ${formatPrice(product.compare_price_cents - product.price_cents)} (${Math.round((1 - product.price_cents / product.compare_price_cents) * 100)}% off)`
+    ? `Save ${formatPrice(Number(product.compare_price_cents) - Number(product.price_cents))} (${Math.round((1 - Number(product.price_cents) / Number(product.compare_price_cents)) * 100)}% off)`
     : null;
 
   return (

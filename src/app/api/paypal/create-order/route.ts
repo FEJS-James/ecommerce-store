@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const order = await createPayPalOrder(
       product.name,
-      product.price_cents,
+      Number(product.price_cents),
       product.id
     );
 

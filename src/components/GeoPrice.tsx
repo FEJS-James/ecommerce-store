@@ -35,26 +35,30 @@ export default function GeoPrice({
 }: GeoPriceProps) {
   const { tier, currency, ready } = usePricing();
 
+  // Coerce to number — SQLite may return strings for INTEGER columns
+  const safePriceCents = Number(priceCents);
+  const safeCompareCents = comparePriceCents != null ? Number(comparePriceCents) : null;
+
   // Convert base price to visitor currency
-  const convertedCents = convertCents(priceCents, currency);
+  const convertedCents = convertCents(safePriceCents, currency);
   // Apply PPP discount
   const finalCents = getDiscountedPrice(convertedCents, tier);
   const formattedPrice = formatPriceWithCurrency(finalCents, currency);
 
   // For strikethrough: show the full (non-discounted) converted price when PPP is active,
   // or show the compare_price if there's a standard sale price
-  const hasProductSale = comparePriceCents && comparePriceCents > priceCents;
+  const hasProductSale = safeCompareCents && safeCompareCents > safePriceCents;
   const hasPPPDiscount = tier > 1;
 
   // SSR / pre-hydration: show a simple USD fallback to avoid layout shift
   if (!ready) {
-    const fallbackFormatted = formatPriceWithCurrency(priceCents, "usd");
+    const fallbackFormatted = formatPriceWithCurrency(safePriceCents, "usd");
     return (
       <span className="inline-flex items-baseline gap-2">
         <span className={className}>{fallbackFormatted}</span>
-        {hasProductSale && (
+        {hasProductSale && safeCompareCents && (
           <span className={strikethroughClassName}>
-            {formatPriceWithCurrency(comparePriceCents, "usd")}
+            {formatPriceWithCurrency(safeCompareCents, "usd")}
           </span>
         )}
       </span>
@@ -69,10 +73,10 @@ export default function GeoPrice({
           {formatPriceWithCurrency(convertedCents, currency)}
         </span>
       )}
-      {!hasPPPDiscount && hasProductSale && (
+      {!hasPPPDiscount && hasProductSale && safeCompareCents && (
         <span className={strikethroughClassName}>
           {formatPriceWithCurrency(
-            convertCents(comparePriceCents, currency),
+            convertCents(safeCompareCents, currency),
             currency,
           )}
         </span>
