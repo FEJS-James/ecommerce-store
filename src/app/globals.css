@@ -354,3 +354,86 @@ body {
   box-shadow: 0 0 40px rgba(99, 102, 241, 0.5), 0 4px 24px rgba(0, 0, 0, 0.4);
   transform: scale(1.02);
 }
+
+/* ========================================
+   Hero Section — CSS-only animations
+   ======================================== */
+
+/* Entrance animation: visible on server render (opacity:1), subtle slide-up via CSS */
+.hero-entrance {
+  animation: heroEntrance 0.6s ease-out;
+}
+
+@keyframes heroEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gradient text for hero heading accent */
+.hero-gradient-text {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 40%, #06B6D4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: heroGradientShift 4s ease-in-out infinite alternate;
+}
+
+@keyframes heroGradientShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* Floating gradient orbs */
+.hero-float-1 { animation: heroFloat1 8s ease-in-out infinite alternate; }
+.hero-float-2 { animation: heroFloat2 10s ease-in-out infinite alternate; }
+.hero-float-3 { animation: heroFloat3 12s ease-in-out infinite alternate; }
+
+@keyframes heroFloat1 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(30px, -20px); }
+}
+
+@keyframes heroFloat2 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-20px, 15px); }
+}
+
+@keyframes heroFloat3 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(15px, -25px); }
+}
+
+/* Floating decorative shapes */
+.hero-shape-float-1 { animation: shapeFloat 6s ease-in-out infinite; }
+.hero-shape-float-2 { animation: shapeFloat 8s ease-in-out infinite reverse; }
+.hero-shape-float-3 { animation: shapeFloat 7s ease-in-out infinite; animation-delay: -2s; }
+
+@keyframes shapeFloat {
+  0%, 100% { transform: translateY(0) rotate(var(--rotate, 0deg)); }
+  50% { transform: translateY(-12px) rotate(var(--rotate, 0deg)); }
+}
+
+/* Reduced motion: disable all hero animations */
+@media (prefers-reduced-motion: reduce) {
+  .hero-entrance {
+    animation: none;
+  }
+  .hero-gradient-text {
+    animation: none;
+  }
+  .hero-float-1,
+  .hero-float-2,
+  .hero-float-3,
+  .hero-shape-float-1,
+  .hero-shape-float-2,
+  .hero-shape-float-3 {
+    animation: none !important;
+  }
+}

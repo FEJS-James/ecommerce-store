@@ -9,30 +9,27 @@ export default function HeroSection() {
       <div className="absolute inset-0" style={{ background: "#0A0A0F" }}>
         {/* Gradient orbs with keyframed floating */}
         <div
-          className="absolute w-[600px] h-[600px] rounded-full blur-[120px] opacity-20"
+          className="hero-float-1 absolute w-[600px] h-[600px] rounded-full blur-[120px] opacity-20"
           style={{
             background: "radial-gradient(circle, #6366F1, transparent)",
             top: "-10%",
             left: "10%",
-            animation: "heroFloat1 8s ease-in-out infinite alternate",
           }}
         />
         <div
-          className="absolute w-[500px] h-[500px] rounded-full blur-[100px] opacity-15"
+          className="hero-float-2 absolute w-[500px] h-[500px] rounded-full blur-[100px] opacity-15"
           style={{
             background: "radial-gradient(circle, #8B5CF6, transparent)",
             bottom: "-5%",
             right: "5%",
-            animation: "heroFloat2 10s ease-in-out infinite alternate",
           }}
         />
         <div
-          className="absolute w-[300px] h-[300px] rounded-full blur-[80px] opacity-10"
+          className="hero-float-3 absolute w-[300px] h-[300px] rounded-full blur-[80px] opacity-10"
           style={{
             background: "radial-gradient(circle, #06B6D4, transparent)",
             top: "30%",
             right: "25%",
-            animation: "heroFloat3 12s ease-in-out infinite alternate",
           }}
         />
 
@@ -49,62 +46,32 @@ export default function HeroSection() {
 
       {/* Floating decorative shapes */}
       <div
-        className="absolute top-[20%] right-[15%] w-20 h-20 border border-indigo-500/20 rounded-lg pointer-events-none"
-        style={{
-          "--rotate": "45deg",
-          animation: "shapeFloat 6s ease-in-out infinite",
-          transform: "rotate(45deg)",
-        } as React.CSSProperties}
+        className="hero-shape-float-1 absolute top-[20%] right-[15%] w-20 h-20 border border-indigo-500/20 rounded-lg pointer-events-none"
+        style={{ transform: "rotate(45deg)" }}
       />
       <div
-        className="absolute bottom-[25%] left-[8%] w-14 h-14 border border-violet-500/15 rounded-full pointer-events-none"
-        style={{
-          "--rotate": "0deg",
-          animation: "shapeFloat 8s ease-in-out infinite reverse",
-        } as React.CSSProperties}
+        className="hero-shape-float-2 absolute bottom-[25%] left-[8%] w-14 h-14 border border-violet-500/15 rounded-full pointer-events-none"
       />
       <div
-        className="absolute top-[60%] right-[30%] w-10 h-10 border border-cyan-500/10 rounded-lg pointer-events-none"
-        style={{
-          "--rotate": "30deg",
-          animation: "shapeFloat 7s ease-in-out infinite",
-          animationDelay: "-2s",
-          transform: "rotate(30deg)",
-        } as React.CSSProperties}
+        className="hero-shape-float-3 absolute top-[60%] right-[30%] w-10 h-10 border border-cyan-500/10 rounded-lg pointer-events-none"
+        style={{ transform: "rotate(30deg)" }}
       />
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-36 relative z-10 w-full">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl hero-entrance">
           <h1
             className="text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.1] mb-6 tracking-tight"
-            style={{
-              opacity: 0,
-              animation: "heroFadeIn 0.8s ease-out 0.1s forwards",
-            }}
           >
             The Future Runs on AI.{" "}
             <span
-              className="inline-block"
-              style={{
-                background:
-                  "linear-gradient(135deg, #6366F1 0%, #8B5CF6 40%, #06B6D4 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                backgroundSize: "200% 200%",
-                animation: "gradientShift 4s ease-in-out infinite alternate",
-              }}
+              className="hero-gradient-text inline-block"
             >
               Your Business Should Too.
             </span>
           </h1>
           <p
             className="text-lg md:text-xl text-zinc-400 mb-10 leading-relaxed max-w-2xl"
-            style={{
-              opacity: 0,
-              animation: "heroFadeIn 0.8s ease-out 0.3s forwards",
-            }}
           >
             AI Armory delivers ready-to-deploy automation blueprints, agent
             configurations, and expert setup services. Stop researching. Start
@@ -112,10 +79,6 @@ export default function HeroSection() {
           </p>
           <div
             className="flex flex-col sm:flex-row gap-4"
-            style={{
-              opacity: 0,
-              animation: "heroFadeIn 0.8s ease-out 0.5s forwards",
-            }}
           >
             <Link
               href="/products"
