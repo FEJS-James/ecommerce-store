@@ -1,5 +1,6 @@
 'use client';
 
+import TrackPageView from "@/components/TrackPageView";
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
@@ -266,6 +267,7 @@ function OrderSuccessContent() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <TrackPageView event="purchase_complete" />
       <div className="text-center mb-12">
         <CelebrationAnimation />
         <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">

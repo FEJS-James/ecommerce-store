@@ -77,6 +77,7 @@ export default function BuyButton({
       <button
         onClick={handleBuy}
         disabled={loading || !consentGiven}
+        data-umami-event="buy_now_click"
         className={`w-full btn-gradient px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 focus-glow ${
           !consentGiven
             ? "opacity-50 cursor-not-allowed"
