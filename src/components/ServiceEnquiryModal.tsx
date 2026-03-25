@@ -3,15 +3,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { formatPriceWithCurrency } from "@/lib/pricing";
+import { parseMarkdownSimple } from "@/lib/utils";
 
 declare global {
   interface Window {
-    umami?: { track: (event: string, data?: Record<string, string | number>) => void };
+    umami?: {
+      track: (event: string, data?: Record<string, string | number>) => void;
+    };
   }
 }
 
 interface ServiceEnquiryModalProps {
   serviceName: string;
+  serviceDescription: string;
   servicePrice: number;
   isOpen: boolean;
   onClose: () => void;
@@ -19,6 +23,7 @@ interface ServiceEnquiryModalProps {
 
 export default function ServiceEnquiryModal({
   serviceName,
+  serviceDescription,
   servicePrice,
   isOpen,
   onClose,
@@ -29,7 +34,9 @@ export default function ServiceEnquiryModal({
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [contactMethod, setContactMethod] = useState<'email' | 'video'>('email');
+  const [contactMethod, setContactMethod] = useState<"email" | "video">(
+    "email",
+  );
   const [error, setError] = useState("");
 
   const resetForm = useCallback(() => {
@@ -150,10 +157,45 @@ export default function ServiceEnquiryModal({
             <h2 className="text-xl font-bold text-white mb-1">
               Enquire: {serviceName}
             </h2>
-            <p className="text-zinc-400 text-sm mb-6">
+            <p className="text-zinc-400 text-sm mb-4">
               {formatPriceWithCurrency(servicePrice, "gbp")} — tell us about
               your needs and we&apos;ll get back to you.
             </p>
+
+            {serviceDescription && (
+              <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 mb-6 max-h-48 overflow-y-auto space-y-2">
+                {parseMarkdownSimple(serviceDescription).map((block, i) => {
+                  if (block.type === "heading") {
+                    return (
+                      <h3
+                        key={i}
+                        className="text-sm font-semibold text-zinc-200"
+                      >
+                        {block.text}
+                      </h3>
+                    );
+                  }
+                  if (block.type === "bullet") {
+                    return (
+                      <p
+                        key={i}
+                        className="text-xs text-zinc-400 pl-3 before:content-['\2022'] before:mr-2 before:text-indigo-400"
+                      >
+                        {block.text}
+                      </p>
+                    );
+                  }
+                  return (
+                    <p
+                      key={i}
+                      className="text-xs text-zinc-400 leading-relaxed"
+                    >
+                      {block.text}
+                    </p>
+                  );
+                })}
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-4 text-red-400 text-sm">
