@@ -4,15 +4,9 @@ import { SITE_URL } from "@/lib/site-config";
  * Shared helpers
  * --------------------------------------------------------------------------- */
 
-function formatCurrency(cents: number, currency: string): string {
+function formatCurrency(cents: number, _currency?: string): string {
   const amount = (cents / 100).toFixed(2);
-  const symbol =
-    currency.toUpperCase() === "EUR"
-      ? "\u20AC"
-      : currency.toUpperCase() === "GBP"
-        ? "\u00A3"
-        : "$";
-  return `${symbol}${amount}`;
+  return `$${amount}`;
 }
 
 function layout(body: string): string {
