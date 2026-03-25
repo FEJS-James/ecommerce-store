@@ -105,7 +105,7 @@ async function handleInvoiceSettled(event: Record<string, unknown>) {
   // Create order — linked to customer
   await execute(
     `INSERT INTO orders (id, stripe_session_id, stripe_payment_intent, payment_method, customer_email, customer_name, customer_id, product_id, amount_cents, currency, status, download_token, token_expires_at)
-     VALUES (?, ?, ?, 'crypto', ?, ?, ?, ?, ?, 'GBP', 'completed', ?, ?)`,
+     VALUES (?, ?, ?, 'crypto', ?, ?, ?, ?, ?, 'USD', 'completed', ?, ?)`,
     [
       orderId,
       null, // no stripe session

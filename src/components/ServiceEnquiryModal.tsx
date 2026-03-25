@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
-import { formatPriceWithCurrency } from "@/lib/pricing";
+import { usePricing } from "@/hooks/usePricing";
+import { convertCents, formatPriceWithCurrency } from "@/lib/pricing";
 import { parseMarkdownSimple } from "@/lib/utils";
 
 declare global {
@@ -38,6 +39,7 @@ export default function ServiceEnquiryModal({
     "email",
   );
   const [error, setError] = useState("");
+  const { currency, ready } = usePricing();
 
   const resetForm = useCallback(() => {
     setName("");
@@ -158,7 +160,9 @@ export default function ServiceEnquiryModal({
               Enquire: {serviceName}
             </h2>
             <p className="text-zinc-400 text-sm mb-4">
-              {formatPriceWithCurrency(servicePrice, "gbp")} — tell us about
+              {ready
+                ? formatPriceWithCurrency(convertCents(servicePrice, currency), currency)
+                : formatPriceWithCurrency(servicePrice, "usd")} — tell us about
               your needs and we&apos;ll get back to you.
             </p>
 

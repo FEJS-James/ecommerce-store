@@ -14,8 +14,6 @@ interface BuyButtonProps {
   /** Original price in USD cents */
   priceCents: number;
   className?: string;
-  /** If true, force GBP and skip PPP discounts (for services) */
-  forceGBP?: boolean;
   /** If false, the button is disabled and shows a consent reminder */
   consentGiven?: boolean;
 }
@@ -24,20 +22,16 @@ export default function BuyButton({
   productId,
   priceCents,
   className = "",
-  forceGBP = false,
   consentGiven = true,
 }: BuyButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { tier, currency, ready } = usePricing();
 
-  const effectiveCurrency = forceGBP ? "gbp" : currency;
-  const effectiveTier = forceGBP ? 1 : tier;
-
-  const convertedCents = convertCents(priceCents, effectiveCurrency);
-  const finalCents = getDiscountedPrice(convertedCents, effectiveTier);
+  const convertedCents = convertCents(priceCents, currency);
+  const finalCents = getDiscountedPrice(convertedCents, tier);
   const displayPrice = ready
-    ? formatPriceWithCurrency(finalCents, effectiveCurrency)
+    ? formatPriceWithCurrency(finalCents, currency)
     : formatPriceWithCurrency(priceCents, "usd");
 
   async function handleBuy() {
@@ -51,8 +45,8 @@ export default function BuyButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId,
-          currency: effectiveCurrency,
-          tier: effectiveTier,
+          currency,
+          tier,
         }),
       });
 

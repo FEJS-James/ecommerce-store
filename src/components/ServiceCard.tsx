@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Lightbulb, Cpu, Server, Building2, ArrowRight } from "lucide-react";
-import { formatPriceWithCurrency } from "@/lib/pricing";
+import { usePricing } from "@/hooks/usePricing";
+import { convertCents, formatPriceWithCurrency } from "@/lib/pricing";
 import { getExcerpt } from "@/lib/utils";
 import ServiceEnquiryModal from "./ServiceEnquiryModal";
 
@@ -23,6 +24,7 @@ export default function ServiceCard({
   tierIndex,
 }: ServiceCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const { currency, ready } = usePricing();
 
   const Icon = TIER_ICONS[tierIndex] ?? Lightbulb;
   const excerpt = getExcerpt(description, 150);
@@ -42,7 +44,9 @@ export default function ServiceCard({
 
         <div className="mb-6">
           <span className="text-3xl font-bold text-white">
-            {formatPriceWithCurrency(priceCents, "gbp")}
+            {ready
+              ? formatPriceWithCurrency(convertCents(priceCents, currency), currency)
+              : formatPriceWithCurrency(priceCents, "usd")}
           </span>
         </div>
 
