@@ -40,6 +40,7 @@ export interface Order {
   token_expires_at: string | null;
   downloaded_at: string | null;
   created_at: string;
+  refunded_at: string | null;
 }
 
 export interface Customer {
@@ -65,6 +66,26 @@ export interface EmailSubscriber {
   lead_magnet: string | null;
   subscribed_at: string;
   unsubscribed_at: string | null;
+  status: 'active' | 'unsubscribed';
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  price_cents: number;
+  quantity: number;
+  created_at: string;
+}
+
+export interface Download {
+  id: string;
+  customer_id: string | null;
+  product_id: string | null;
+  order_id: string | null;
+  downloaded_at: string;
+  ip_address: string | null;
+  user_agent: string | null;
 }
 
 export interface DashboardStats {

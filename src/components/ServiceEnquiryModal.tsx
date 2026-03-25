@@ -4,12 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { formatPriceWithCurrency } from "@/lib/pricing";
 
-declare global {
-  interface Window {
-    umami?: { track: (event: string, data?: Record<string, unknown>) => void };
-  }
-}
-
 interface ServiceEnquiryModalProps {
   serviceName: string;
   servicePrice: number;

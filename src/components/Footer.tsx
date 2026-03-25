@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Shield, Zap, Lock, ShieldCheck } from "lucide-react";
+import { Zap, Lock, ShieldCheck, Shield } from "lucide-react";
+import Logo from "./Logo";
 
 export default function Footer() {
   return (
@@ -13,10 +14,9 @@ export default function Footer() {
           <div className="md:col-span-2">
             <Link
               href="/"
-              className="flex items-center gap-2.5 font-bold text-xl text-white mb-4"
+              className="inline-flex mb-4"
             >
-              <Shield className="w-6 h-6 text-indigo-400" aria-hidden="true" />
-              <span>AI Armory</span>
+              <Logo size={28} variant="full" colorVariant="gradient" />
             </Link>
             <p className="text-zinc-500 max-w-md text-sm leading-relaxed">
               Your arsenal of AI-powered digital products for creators,

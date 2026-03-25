@@ -158,11 +158,49 @@ export async function initializeDb(): Promise<void> {
     // ignore
   }
 
+  // Migration: add status to email_subscribers
+  try {
+    await db.execute({ sql: `ALTER TABLE email_subscribers ADD COLUMN status TEXT NOT NULL DEFAULT 'active'`, args: [] });
+  } catch {
+    // Column already exists
+  }
+
+  // Migration: add refunded_at to orders
+  try {
+    await db.execute({ sql: `ALTER TABLE orders ADD COLUMN refunded_at TEXT`, args: [] });
+  } catch {
+    // Column already exists
+  }
+
   // Migration: add stripe_product_id to products if not present
   try {
     await db.execute({ sql: `ALTER TABLE products ADD COLUMN stripe_product_id TEXT`, args: [] });
   } catch {
     // Column already exists
+  }
+
+  // Create indexes for frequently queried columns
+  const indexes = [
+    'CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id)',
+    'CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id)',
+    'CREATE INDEX IF NOT EXISTS idx_downloads_customer_id ON downloads(customer_id)',
+    'CREATE INDEX IF NOT EXISTS idx_downloads_product_id ON downloads(product_id)',
+    'CREATE INDEX IF NOT EXISTS idx_downloads_order_id ON downloads(order_id)',
+    'CREATE INDEX IF NOT EXISTS idx_downloads_downloaded_at ON downloads(downloaded_at)',
+    'CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id)',
+    'CREATE INDEX IF NOT EXISTS idx_orders_product_id ON orders(product_id)',
+    'CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)',
+    'CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_email_subscribers_status ON email_subscribers(status)',
+    'CREATE INDEX IF NOT EXISTS idx_email_subscribers_source ON email_subscribers(source)',
+    'CREATE INDEX IF NOT EXISTS idx_email_subscribers_subscribed_at ON email_subscribers(subscribed_at)',
+  ];
+  for (const idx of indexes) {
+    try {
+      await db.execute({ sql: idx, args: [] });
+    } catch {
+      // Index may already exist
+    }
   }
 
   // Check if products table is empty; if so, seed it

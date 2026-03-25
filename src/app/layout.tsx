@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} -- Your Arsenal of AI-Powered Digital Products`,
     description: SITE_DESCRIPTION,
   },
+  icons: {
+    icon: "/favicon.svg",
+  },
   robots: {
     index: true,
     follow: true,
