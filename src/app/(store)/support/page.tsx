@@ -68,7 +68,7 @@ const FAQ_CATEGORIES: FAQCategory[] = [
       {
         question: "Can I pay in instalments?",
         answer:
-          "For services over \u00a3500, we offer a 50/50 payment split: half upfront and half on completion.",
+          "For services over $500, we offer a 50/50 payment split: half upfront and half on completion.",
       },
     ],
   },
