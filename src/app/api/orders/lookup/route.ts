@@ -51,27 +51,30 @@ export async function GET(request: NextRequest) {
     } else if (orderId) {
       const token = request.nextUrl.searchParams.get('token');
       if (token) {
-        const hmacSecret = process.env.PAYPAL_CLIENT_SECRET || 'fallback-secret';
-        const [timestampStr, hmacValue] = token.split('.');
-        const timestamp = parseInt(timestampStr, 10);
-        const now = Math.floor(Date.now() / 1000);
-        // Token valid for 1 hour
-        if (!isNaN(timestamp) && now - timestamp < 3600 && hmacValue) {
-          const expectedHmac = crypto
-            .createHmac('sha256', hmacSecret)
-            .update(`${orderId}:${timestamp}`)
-            .digest('hex')
-            .slice(0, 16);
-          if (
-            hmacValue.length === expectedHmac.length &&
-            crypto.timingSafeEqual(
-              Buffer.from(expectedHmac),
-              Buffer.from(hmacValue)
-            )
-          ) {
-            verified = true;
+        const hmacSecret = process.env.PAYPAL_CLIENT_SECRET;
+        if (hmacSecret) {
+          const [timestampStr, hmacValue] = token.split('.');
+          const timestamp = parseInt(timestampStr, 10);
+          const now = Math.floor(Date.now() / 1000);
+          // Token valid for 1 hour
+          if (!isNaN(timestamp) && now - timestamp < 3600 && hmacValue) {
+            const expectedHmac = crypto
+              .createHmac('sha256', hmacSecret)
+              .update(`${orderId}:${timestamp}`)
+              .digest('hex')
+              .slice(0, 16);
+            if (
+              hmacValue.length === expectedHmac.length &&
+              crypto.timingSafeEqual(
+                Buffer.from(expectedHmac),
+                Buffer.from(hmacValue)
+              )
+            ) {
+              verified = true;
+            }
           }
         }
+        // If hmacSecret is not configured, treat as unverified (verified stays false)
       }
     }
 

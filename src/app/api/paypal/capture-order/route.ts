@@ -140,18 +140,23 @@ export async function POST(request: NextRequest) {
 
     // Generate a short-lived HMAC token for the success page redirect
     // This proves the caller was the one who completed the payment
-    const hmacSecret = process.env.PAYPAL_CLIENT_SECRET || 'fallback-secret';
-    const timestamp = Math.floor(Date.now() / 1000);
-    const hmac = crypto
-      .createHmac('sha256', hmacSecret)
-      .update(`${orderId}:${timestamp}`)
-      .digest('hex')
-      .slice(0, 16);
+    const hmacSecret = process.env.PAYPAL_CLIENT_SECRET;
+    // Only generate HMAC token if secret is configured
+    let token: string | undefined;
+    if (hmacSecret) {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const hmac = crypto
+        .createHmac('sha256', hmacSecret)
+        .update(`${orderId}:${timestamp}`)
+        .digest('hex')
+        .slice(0, 16);
+      token = `${timestamp}.${hmac}`;
+    }
 
     return NextResponse.json({
       success: true,
       orderId,
-      token: `${timestamp}.${hmac}`,
+      ...(token ? { token } : {}),
     });
   } catch (error) {
     console.error('PayPal capture error:', error);
