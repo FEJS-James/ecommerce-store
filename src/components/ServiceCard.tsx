@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Lightbulb, Cpu, Server, Building2, ArrowRight } from "lucide-react";
 import { formatPriceWithCurrency } from "@/lib/pricing";
+import { getExcerpt } from "@/lib/utils";
 import ServiceEnquiryModal from "./ServiceEnquiryModal";
 
 // Map tier position (index) to an appropriate icon
@@ -24,6 +25,7 @@ export default function ServiceCard({
   const [modalOpen, setModalOpen] = useState(false);
 
   const Icon = TIER_ICONS[tierIndex] ?? Lightbulb;
+  const excerpt = getExcerpt(description, 150);
 
   return (
     <>
@@ -35,7 +37,7 @@ export default function ServiceCard({
         <h2 className="text-xl font-bold text-white mb-2">{name}</h2>
 
         <p className="text-zinc-400 text-sm mb-6 leading-relaxed flex-1">
-          {description}
+          {excerpt}
         </p>
 
         <div className="mb-6">
@@ -55,6 +57,7 @@ export default function ServiceCard({
 
       <ServiceEnquiryModal
         serviceName={name}
+        serviceDescription={description}
         servicePrice={priceCents}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
