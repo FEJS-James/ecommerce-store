@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { FileText, FileArchive, ImageIcon, File, Upload, Trash2, RefreshCw } from 'lucide-react';
+import { FileText, FileArchive, ImageIcon, File, Upload, Trash2, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import FilePreviewPanel from './FilePreviewPanel';
 
 interface ProductFilePanelProps {
   productId: string;
@@ -36,6 +37,7 @@ export default function ProductFilePanel({
   fileSizeBytes,
   onFileChange,
 }: ProductFilePanelProps) {
+  const [showPreview, setShowPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -168,6 +170,13 @@ export default function ProductFilePanel({
               Replace
             </button>
             <button
+              onClick={() => setShowPreview((v) => !v)}
+              className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg transition-colors"
+              title={showPreview ? 'Hide preview' : 'Preview file'}
+            >
+              {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+            <button
               onClick={handleDelete}
               disabled={uploading}
               className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm bg-red-900/40 hover:bg-red-900/60 text-red-300 rounded-lg transition-colors disabled:opacity-50"
@@ -175,6 +184,9 @@ export default function ProductFilePanel({
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
+          {showPreview && fileUrl && (
+            <FilePreviewPanel fileUrl={fileUrl} fileName={fileName || ''} />
+          )}
         </div>
       ) : (
         <div
