@@ -1,3 +1,4 @@
+import TrackPageView from "@/components/TrackPageView";
 import { notFound } from "next/navigation";
 import { queryOne, queryAll } from "@/lib/db";
 import { formatPrice, CATEGORIES, CATEGORY_FAQS } from "@/lib/utils";
@@ -214,6 +215,7 @@ export default async function ProductPage({ params }: PageProps) {
 
   return (
     <>
+      <TrackPageView event="product_view" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 pb-28 lg:pb-12">
         {/* Breadcrumb */}
         <nav className="text-sm text-zinc-500 mb-8" aria-label="Breadcrumb">

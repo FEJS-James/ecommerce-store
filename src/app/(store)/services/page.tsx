@@ -100,6 +100,7 @@ export default function ServicesPage() {
             </ul>
             <a
               href={`mailto:hello@aiarmory.com?subject=${encodeURIComponent(service.name)}`}
+              data-umami-event="service_enquiry"
               className="w-full btn-gradient px-6 py-3 rounded-xl font-semibold text-center flex items-center justify-center gap-2 focus-glow"
             >
               <Mail className="w-4 h-4" aria-hidden="true" />
