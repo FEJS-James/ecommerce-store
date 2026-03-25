@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Shield, Menu, X, User, HelpCircle } from "lucide-react";
+import { Menu, X, User, HelpCircle } from "lucide-react";
+import Logo from "./Logo";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -30,13 +31,14 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           <Link
             href="/"
-            className="flex items-center gap-2.5 font-bold text-xl text-white group"
+            className="flex items-center group"
           >
-            <Shield
-              className="w-6 h-6 text-indigo-400 group-hover:text-indigo-300 transition-colors"
-              aria-hidden="true"
-            />
-            <span>AI Armory</span>
+            <span className="hidden sm:inline-flex">
+              <Logo size={28} variant="full" colorVariant="gradient" />
+            </span>
+            <span className="sm:hidden">
+              <Logo size={28} variant="icon" colorVariant="gradient" />
+            </span>
           </Link>
 
           {/* Desktop nav */}
@@ -113,13 +115,7 @@ export default function Header() {
             aria-label="Navigation menu"
           >
             <div className="flex items-center justify-between mb-8">
-              <span className="font-bold text-lg text-white flex items-center gap-2">
-                <Shield
-                  className="w-5 h-5 text-indigo-400"
-                  aria-hidden="true"
-                />
-                AI Armory
-              </span>
+              <Logo size={24} variant="full" colorVariant="gradient" />
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors focus-glow"
