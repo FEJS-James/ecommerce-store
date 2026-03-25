@@ -1,0 +1,103 @@
+'use client';
+
+import { useState } from 'react';
+import { Loader2, X, Zap, Lock, ShieldCheck, Mail, FileText, HardDrive } from 'lucide-react';
+import CategoryIcon from '@/components/CategoryIcon';
+
+interface MobilePurchaseBarProps {
+  productId: string;
+  productName: string;
+  price: string;
+  priceRaw: number;
+  comparePriceCents: number | null;
+  savingsText: string | null;
+  categoryLabel: string | null;
+  categoryIconName: string | null;
+  fileName: string | null;
+  fileSizeFormatted: string | null;
+}
+
+export default function MobilePurchaseBar({ productId, productName, price, priceRaw, comparePriceCents, savingsText, categoryLabel, categoryIconName, fileName, fileSizeFormatted }: MobilePurchaseBarProps) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [expanded, setExpanded] = useState(false);
+
+  async function handleBuy() {
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId }) });
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else if (data.error === 'stripe_not_configured') { setError('Payments coming soon!'); }
+      else { setError(data.error || 'Something went wrong'); }
+    } catch { setError('Network error. Please try again.'); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <>
+      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
+        <div className="border-t border-white/[0.08] px-4 py-3 flex items-center justify-between gap-3" style={{ background: 'rgba(10, 10, 15, 0.95)', backdropFilter: 'blur(20px)' }}>
+          <div className="flex-1 min-w-0">
+            <button onClick={() => setExpanded(true)} className="text-left focus-glow rounded-lg p-1 -m-1" aria-label="View purchase details">
+              <p className="text-white font-bold text-lg">{price}</p>
+              {comparePriceCents != null && comparePriceCents > priceRaw && (<p className="text-xs text-emerald-400">{savingsText}</p>)}
+            </button>
+          </div>
+          <button onClick={handleBuy} disabled={loading} className="btn-gradient px-6 py-3 rounded-xl font-semibold text-base whitespace-nowrap flex items-center gap-2 focus-glow min-h-[44px]">
+            {loading ? (<><Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /><span>Processing</span></>) : (<span>Buy Now</span>)}
+          </button>
+        </div>
+        {error && (<div className="bg-amber-500/10 border-t border-amber-500/20 px-4 py-2 text-center"><p className="text-amber-400 text-sm">{error}</p></div>)}
+      </div>
+
+      {expanded && (
+        <div className="fixed inset-0 z-50 lg:hidden flex items-end" onClick={() => setExpanded(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative w-full rounded-t-3xl p-6 pb-8 animate-slide-up" style={{ background: '#0A0A0F', border: '1px solid rgba(255, 255, 255, 0.08)' }} onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setExpanded(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors focus-glow min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Close">
+              <X className="w-5 h-5 text-zinc-400" aria-hidden="true" />
+            </button>
+
+            {categoryLabel && categoryIconName && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full mb-3" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#A5B4FC' }}>
+                <CategoryIcon name={categoryIconName} className="w-3 h-3" aria-hidden="true" />{categoryLabel}
+              </span>
+            )}
+
+            <h3 className="text-lg font-bold text-white mb-4">{productName}</h3>
+
+            <div className="flex items-baseline gap-3 mb-4">
+              <span className="text-3xl font-bold text-white">{price}</span>
+              {comparePriceCents != null && comparePriceCents > priceRaw && (<span className="text-lg text-zinc-600 line-through">${(comparePriceCents / 100).toFixed(2)}</span>)}
+            </div>
+
+            {savingsText && comparePriceCents != null && comparePriceCents > priceRaw && (
+              <div className="text-sm font-medium px-4 py-2 rounded-lg mb-5 text-center" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#6EE7B7' }}>{savingsText}</div>
+            )}
+
+            <button onClick={handleBuy} disabled={loading} className="w-full btn-gradient px-8 py-4 rounded-xl font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-2 focus-glow mb-5 min-h-[48px]">
+              {loading ? (<><Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />Processing...</>) : (<>Buy Now &mdash; {price}</>)}
+            </button>
+
+            <div className="grid grid-cols-2 gap-3 text-sm text-zinc-500 mb-4">
+              <div className="flex items-center gap-2"><Zap className="w-4 h-4 text-indigo-400 shrink-0" aria-hidden="true" /><span>Instant download</span></div>
+              <div className="flex items-center gap-2"><Lock className="w-4 h-4 text-indigo-400 shrink-0" aria-hidden="true" /><span>Lifetime access</span></div>
+              <div className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" aria-hidden="true" /><span>30-day guarantee</span></div>
+              <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-indigo-400 shrink-0" aria-hidden="true" /><span>Email support</span></div>
+            </div>
+
+            {(fileName || fileSizeFormatted) && (
+              <div className="flex items-center gap-4 text-xs text-zinc-600 pt-3 border-t border-white/[0.06]">
+                {fileName && (<div className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" aria-hidden="true" /><span className="truncate max-w-[120px]">{fileName}</span></div>)}
+                {fileSizeFormatted && (<div className="flex items-center gap-1.5"><HardDrive className="w-3.5 h-3.5" aria-hidden="true" /><span>{fileSizeFormatted}</span></div>)}
+              </div>
+            )}
+
+            {error && (<p className="text-amber-400 text-sm mt-3 text-center">{error}</p>)}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

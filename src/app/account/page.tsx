@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { Shield, Package, Download, Settings, ShoppingCart, FolderOpen, LogOut } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -68,27 +69,24 @@ export default function CustomerDashboard() {
   const [settingsError, setSettingsError] = useState('');
   const [settingsLoading, setSettingsLoading] = useState(false);
 
-  // Fetch orders
   useEffect(() => {
     if (!customer) return;
     fetch('/api/account/orders')
       .then((res) => res.json())
-      .then((data) => setOrders(data.orders || []))
+      .then((data) => setOrders(Array.isArray(data.orders) ? data.orders : []))
       .catch(() => {})
       .finally(() => setLoadingOrders(false));
   }, [customer]);
 
-  // Fetch downloads
   useEffect(() => {
     if (!customer) return;
     fetch('/api/account/downloads')
       .then((res) => res.json())
-      .then((data) => setDownloads(data.downloads || []))
+      .then((data) => setDownloads(Array.isArray(data.downloads) ? data.downloads : []))
       .catch(() => {})
       .finally(() => setLoadingDownloads(false));
   }, [customer]);
 
-  // Populate settings fields when customer loads
   useEffect(() => {
     if (customer) {
       setSettingsName(customer.name || '');
@@ -186,10 +184,10 @@ export default function CustomerDashboard() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-pulse space-y-4 text-center">
-          <div className="h-8 w-48 bg-gray-200 rounded mx-auto" />
-          <div className="h-4 w-32 bg-gray-200 rounded mx-auto" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0A0A0F' }}>
+        <div className="space-y-4 text-center">
+          <div className="h-8 w-48 shimmer rounded mx-auto" />
+          <div className="h-4 w-32 shimmer rounded mx-auto" />
         </div>
       </div>
     );
@@ -197,35 +195,38 @@ export default function CustomerDashboard() {
 
   if (!customer) return null;
 
-  const tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: 'orders', label: 'Orders', icon: '📦' },
-    { id: 'downloads', label: 'Downloads', icon: '⬇️' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+  const tabs: { id: Tab; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: 'orders', label: 'Orders', Icon: Package },
+    { id: 'downloads', label: 'Downloads', Icon: Download },
+    { id: 'settings', label: 'Settings', Icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: '#0A0A0F' }}>
       {/* Header */}
-      <div className="bg-gray-900 text-white">
+      <div className="border-b border-white/[0.06]" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-2xl">🛡️</Link>
+            <Link href="/">
+              <Shield className="w-7 h-7 text-indigo-400" aria-hidden="true" />
+            </Link>
             <div>
-              <h1 className="text-xl font-bold">My Account</h1>
-              <p className="text-gray-400 text-sm">{customer.email}</p>
+              <h1 className="text-xl font-bold text-white">My Account</h1>
+              <p className="text-zinc-500 text-sm">{customer.email}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <Link
               href="/products"
-              className="text-sm text-gray-300 hover:text-white transition-colors hidden sm:block"
+              className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block"
             >
               Browse Products
             </Link>
             <button
               onClick={handleLogout}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
+              className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-1.5"
             >
+              <LogOut className="w-4 h-4" aria-hidden="true" />
               Sign Out
             </button>
           </div>
@@ -234,7 +235,7 @@ export default function CustomerDashboard() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-200 rounded-lg p-1 mb-8">
+        <div className="flex gap-1 glass rounded-xl p-1 mb-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -243,13 +244,13 @@ export default function CustomerDashboard() {
                 setSettingsMsg('');
                 setSettingsError('');
               }}
-              className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 focus-glow ${
                 activeTab === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white/[0.1] text-white shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-300'
               }`}
             >
-              <span className="mr-1.5">{tab.icon}</span>
+              <tab.Icon className="w-4 h-4" aria-hidden="true" />
               {tab.label}
             </button>
           ))}
@@ -258,23 +259,23 @@ export default function CustomerDashboard() {
         {/* Orders Tab */}
         {activeTab === 'orders' && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Purchase History</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Purchase History</h2>
             {loadingOrders ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white rounded-lg p-6 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-                    <div className="h-4 bg-gray-200 rounded w-1/4" />
+                  <div key={i} className="glass rounded-2xl p-6">
+                    <div className="h-4 shimmer rounded w-1/3 mb-2" />
+                    <div className="h-4 shimmer rounded w-1/4" />
                   </div>
                 ))}
               </div>
             ) : orders.length === 0 ? (
-              <div className="bg-white rounded-xl p-12 text-center">
-                <span className="text-4xl block mb-4">🛒</span>
-                <p className="text-gray-500 mb-4">No orders yet</p>
+              <div className="glass rounded-2xl p-12 text-center">
+                <ShoppingCart className="w-10 h-10 text-zinc-600 mx-auto mb-4" aria-hidden="true" />
+                <p className="text-zinc-500 mb-4">No orders yet</p>
                 <Link
                   href="/products"
-                  className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="inline-block btn-gradient px-6 py-3 rounded-lg font-medium focus-glow"
                 >
                   Browse Products
                 </Link>
@@ -282,10 +283,11 @@ export default function CustomerDashboard() {
             ) : (
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <div key={order.id} className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div key={order.id} className="glass rounded-2xl p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
                         {order.product_thumbnail_url && (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={order.product_thumbnail_url}
                             alt=""
@@ -293,22 +295,22 @@ export default function CustomerDashboard() {
                           />
                         )}
                         <div>
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-white">
                             {order.product_name || 'Digital Product'}
                           </h3>
-                          <p className="text-sm text-gray-500 mt-1">
+                          <p className="text-sm text-zinc-500 mt-1">
                             {formatDate(order.created_at)} · {formatPrice(order.amount_cents)}
                           </p>
                           <span
                             className={`inline-flex items-center gap-1 text-xs mt-2 px-2 py-0.5 rounded-full ${
                               order.status === 'completed'
-                                ? 'bg-green-50 text-green-700'
-                                : 'bg-yellow-50 text-yellow-700'
+                                ? 'bg-emerald-500/10 text-emerald-400'
+                                : 'bg-amber-500/10 text-amber-400'
                             }`}
                           >
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${
-                                order.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'
+                                order.status === 'completed' ? 'bg-emerald-400' : 'bg-amber-400'
                               }`}
                             />
                             {order.status === 'completed' ? 'Completed' : order.status}
@@ -318,9 +320,10 @@ export default function CustomerDashboard() {
                       {order.download_token && order.download_count < order.max_downloads && (
                         <a
                           href={`/api/download/${order.download_token}`}
-                          className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                          className="flex-shrink-0 btn-gradient px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 focus-glow"
                         >
-                          ⬇️ Download
+                          <Download className="w-4 h-4" aria-hidden="true" />
+                          Download
                         </a>
                       )}
                     </div>
@@ -334,23 +337,23 @@ export default function CustomerDashboard() {
         {/* Downloads Tab */}
         {activeTab === 'downloads' && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Download Library</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Download Library</h2>
             {loadingDownloads ? (
               <div className="space-y-4">
                 {[1, 2].map((i) => (
-                  <div key={i} className="bg-white rounded-lg p-6 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-                    <div className="h-4 bg-gray-200 rounded w-1/4" />
+                  <div key={i} className="glass rounded-2xl p-6">
+                    <div className="h-4 shimmer rounded w-1/3 mb-2" />
+                    <div className="h-4 shimmer rounded w-1/4" />
                   </div>
                 ))}
               </div>
             ) : downloads.length === 0 ? (
-              <div className="bg-white rounded-xl p-12 text-center">
-                <span className="text-4xl block mb-4">📂</span>
-                <p className="text-gray-500 mb-4">No downloads available</p>
+              <div className="glass rounded-2xl p-12 text-center">
+                <FolderOpen className="w-10 h-10 text-zinc-600 mx-auto mb-4" aria-hidden="true" />
+                <p className="text-zinc-500 mb-4">No downloads available</p>
                 <Link
                   href="/products"
-                  className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="inline-block btn-gradient px-6 py-3 rounded-lg font-medium focus-glow"
                 >
                   Browse Products
                 </Link>
@@ -358,15 +361,16 @@ export default function CustomerDashboard() {
             ) : (
               <div className="space-y-4">
                 {downloads.map((dl) => {
-                  const expired = dl.token_expires_at && new Date(dl.token_expires_at) < new Date();
+                  const expired = dl.token_expires_at && new Date(String(dl.token_expires_at)) < new Date();
                   const limitReached = dl.download_count >= dl.max_downloads;
                   const canDownload = !expired && !limitReached && dl.file_url;
 
                   return (
-                    <div key={dl.order_id} className="bg-white rounded-xl border border-gray-200 p-6">
+                    <div key={dl.order_id} className="glass rounded-2xl p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-4">
                           {dl.product_thumbnail_url && (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={dl.product_thumbnail_url}
                               alt=""
@@ -374,11 +378,11 @@ export default function CustomerDashboard() {
                             />
                           )}
                           <div>
-                            <h3 className="font-semibold text-gray-900">{dl.product_name}</h3>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <h3 className="font-semibold text-white">{dl.product_name}</h3>
+                            <p className="text-sm text-zinc-500 mt-1">
                               Purchased {formatDate(dl.order_created_at)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-zinc-600 mt-1">
                               Downloads: {dl.download_count} / {dl.max_downloads}
                             </p>
                           </div>
@@ -387,16 +391,17 @@ export default function CustomerDashboard() {
                           {canDownload ? (
                             <a
                               href={`/api/download/${dl.download_token}`}
-                              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                              className="btn-gradient px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 focus-glow"
                             >
-                              ⬇️ Download
+                              <Download className="w-4 h-4" aria-hidden="true" />
+                              Download
                             </a>
                           ) : !dl.file_url ? (
-                            <span className="text-sm text-gray-400">File not available yet</span>
+                            <span className="text-sm text-zinc-600">File not available yet</span>
                           ) : expired ? (
-                            <span className="text-sm text-red-500">Link expired</span>
+                            <span className="text-sm text-red-400">Link expired</span>
                           ) : (
-                            <span className="text-sm text-red-500">Download limit reached</span>
+                            <span className="text-sm text-red-400">Download limit reached</span>
                           )}
                         </div>
                       </div>
@@ -411,34 +416,34 @@ export default function CustomerDashboard() {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div className="space-y-8">
-            <h2 className="text-lg font-semibold text-gray-900">Account Settings</h2>
+            <h2 className="text-lg font-semibold text-white">Account Settings</h2>
 
             {settingsMsg && (
-              <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg text-sm">
+              <div className="glass p-4 rounded-xl text-sm border border-emerald-500/20 text-emerald-400">
                 {settingsMsg}
               </div>
             )}
             {settingsError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-sm">
+              <div className="glass p-4 rounded-xl text-sm border border-red-500/20 text-red-400">
                 {settingsError}
               </div>
             )}
 
             {/* Update Name */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="font-medium text-gray-900 mb-4">Name</h3>
+            <div className="glass rounded-2xl p-6">
+              <h3 className="font-medium text-white mb-4">Name</h3>
               <form onSubmit={handleUpdateName} className="flex gap-3">
                 <input
                   type="text"
                   value={settingsName}
                   onChange={(e) => setSettingsName(e.target.value)}
                   placeholder="Your name"
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 text-sm"
+                  className="flex-1 px-4 py-2.5 rounded-lg glass-input text-sm"
                 />
                 <button
                   type="submit"
                   disabled={settingsLoading}
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  className="btn-gradient px-5 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 focus-glow"
                 >
                   Save
                 </button>
@@ -446,8 +451,8 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Update Email */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="font-medium text-gray-900 mb-4">Email</h3>
+            <div className="glass rounded-2xl p-6">
+              <h3 className="font-medium text-white mb-4">Email</h3>
               <form onSubmit={handleUpdateEmail} className="flex gap-3">
                 <input
                   type="email"
@@ -455,12 +460,12 @@ export default function CustomerDashboard() {
                   onChange={(e) => setSettingsEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 text-sm"
+                  className="flex-1 px-4 py-2.5 rounded-lg glass-input text-sm"
                 />
                 <button
                   type="submit"
                   disabled={settingsLoading}
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  className="btn-gradient px-5 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 focus-glow"
                 >
                   Save
                 </button>
@@ -468,8 +473,8 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Change Password */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="font-medium text-gray-900 mb-4">Change Password</h3>
+            <div className="glass rounded-2xl p-6">
+              <h3 className="font-medium text-white mb-4">Change Password</h3>
               <form onSubmit={handleUpdatePassword} className="space-y-3">
                 <input
                   type="password"
@@ -477,7 +482,7 @@ export default function CustomerDashboard() {
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Current password"
                   required
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 text-sm"
+                  className="w-full px-4 py-2.5 rounded-lg glass-input text-sm"
                 />
                 <input
                   type="password"
@@ -486,7 +491,7 @@ export default function CustomerDashboard() {
                   placeholder="New password (at least 8 characters)"
                   required
                   minLength={8}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 text-sm"
+                  className="w-full px-4 py-2.5 rounded-lg glass-input text-sm"
                 />
                 <input
                   type="password"
@@ -495,12 +500,12 @@ export default function CustomerDashboard() {
                   placeholder="Confirm new password"
                   required
                   minLength={8}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 text-sm"
+                  className="w-full px-4 py-2.5 rounded-lg glass-input text-sm"
                 />
                 <button
                   type="submit"
                   disabled={settingsLoading}
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  className="btn-gradient px-5 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 focus-glow"
                 >
                   Update Password
                 </button>

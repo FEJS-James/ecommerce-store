@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import ProductCard from '@/components/ProductCard';
+import CategoryIcon from '@/components/CategoryIcon';
 import { CATEGORIES } from '@/lib/utils';
+import { safeDate } from '@/lib/utils';
 import type { Product } from '@/lib/types';
 
 interface ProductsGridProps {
@@ -28,7 +30,7 @@ export default function ProductsGrid({ products, initialCategory }: ProductsGrid
       case 'price-high':
         return (b.price_cents ?? 0) - (a.price_cents ?? 0);
       case 'newest':
-        return new Date(String(b.created_at)).getTime() - new Date(String(a.created_at)).getTime();
+        return safeDate(b.created_at).getTime() - safeDate(a.created_at).getTime();
       case 'featured':
       default:
         return (b.featured ?? 0) - (a.featured ?? 0);
@@ -38,15 +40,15 @@ export default function ProductsGrid({ products, initialCategory }: ProductsGrid
   return (
     <>
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
+      <div className="flex flex-col md:flex-row gap-4 mb-10">
         {/* Category tabs */}
         <div className="flex flex-wrap gap-2 flex-1">
           <button
             onClick={() => setCategory('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all focus-glow ${
               category === 'all'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'btn-gradient'
+                : 'glass glass-hover text-zinc-400 hover:text-white'
             }`}
           >
             All
@@ -55,13 +57,14 @@ export default function ProductsGrid({ products, initialCategory }: ProductsGrid
             <button
               key={key}
               onClick={() => setCategory(key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 focus-glow ${
                 category === key
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'btn-gradient'
+                  : 'glass glass-hover text-zinc-400 hover:text-white'
               }`}
             >
-              {cat.icon} {cat.label}
+              <CategoryIcon name={cat.iconName} className="w-3.5 h-3.5" aria-hidden="true" />
+              {cat.label}
             </button>
           ))}
         </div>
@@ -70,7 +73,7 @@ export default function ProductsGrid({ products, initialCategory }: ProductsGrid
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="px-4 py-2 rounded-lg glass-input text-sm focus-glow cursor-pointer"
         >
           <option value="featured">Featured</option>
           <option value="price-low">Price: Low to High</option>
@@ -81,8 +84,8 @@ export default function ProductsGrid({ products, initialCategory }: ProductsGrid
 
       {/* Products Grid */}
       {sorted.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-gray-500 text-lg">No products found in this category.</p>
+        <div className="text-center py-20">
+          <p className="text-zinc-500 text-lg">No products found in this category.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -58,29 +58,29 @@ export default function AdminSettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">💳</span>
+                  <span className="text-2xl font-bold text-indigo-600">S</span>
                   <div><p className="font-medium text-gray-900">Stripe Payments</p><p className="text-xs text-gray-500">Accept credit card payments</p></div>
                 </div>
                 <span className={`text-xs px-3 py-1 rounded-full font-medium ${storeConfig?.stripeConfigured ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {storeConfig?.stripeConfigured ? '✅ Connected' : '❌ Not configured'}
+                  {storeConfig?.stripeConfigured ? 'Connected' : 'Not configured'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">☁️</span>
+                  <span className="text-2xl font-bold text-blue-600">B</span>
                   <div><p className="font-medium text-gray-900">Blob Storage</p><p className="text-xs text-gray-500">File uploads for products</p></div>
                 </div>
                 <span className={`text-xs px-3 py-1 rounded-full font-medium ${storeConfig?.blobConfigured ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {storeConfig?.blobConfigured ? '✅ Connected' : '❌ Not configured'}
+                  {storeConfig?.blobConfigured ? 'Connected' : 'Not configured'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🗄️</span>
+                  <span className="text-2xl font-bold text-green-600">D</span>
                   <div><p className="font-medium text-gray-900">Database</p><p className="text-xs text-gray-500">Turso / libSQL</p></div>
                 </div>
                 <span className={`text-xs px-3 py-1 rounded-full font-medium ${storeConfig?.databaseUrl === 'configured' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {storeConfig?.databaseUrl === 'configured' ? '✅ Connected' : '❌ Not configured'}
+                  {storeConfig?.databaseUrl === 'configured' ? 'Connected' : 'Not configured'}
                 </span>
               </div>
             </div>
@@ -90,9 +90,9 @@ export default function AdminSettingsPage() {
             <h2 className="font-semibold text-gray-900 mb-4">Payment Methods</h2>
             <div className="space-y-3">
               {[
-                { icon: '💳', label: 'Credit / Debit Cards', detail: storeConfig?.stripeConfigured ? 'Enabled' : 'Disabled' },
-                { icon: '🍎', label: 'Apple Pay', detail: storeConfig?.stripeConfigured ? 'Via Stripe' : 'Disabled' },
-                { icon: '🔵', label: 'Google Pay', detail: storeConfig?.stripeConfigured ? 'Via Stripe' : 'Disabled' },
+                { icon: 'CC', label: 'Credit / Debit Cards', detail: storeConfig?.stripeConfigured ? 'Enabled' : 'Disabled' },
+                { icon: 'AP', label: 'Apple Pay', detail: storeConfig?.stripeConfigured ? 'Via Stripe' : 'Disabled' },
+                { icon: 'GP', label: 'Google Pay', detail: storeConfig?.stripeConfigured ? 'Via Stripe' : 'Disabled' },
               ].map((pm) => (
                 <div key={pm.label} className="flex items-center justify-between">
                   <div className="flex items-center gap-2"><span className="text-lg">{pm.icon}</span><span className="text-sm text-gray-900">{pm.label}</span></div>

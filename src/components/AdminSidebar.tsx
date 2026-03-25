@@ -2,14 +2,26 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  Shield,
+  BarChart3,
+  Package,
+  ShoppingCart,
+  Users,
+  Mail,
+  Settings,
+  Globe,
+  LogOut,
+} from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
 
-const navItems = [
-  { href: '/admin', label: 'Dashboard', icon: '📊' },
-  { href: '/admin/products', label: 'Products', icon: '📦' },
-  { href: '/admin/orders', label: 'Orders', icon: '🛒' },
-  { href: '/admin/customers', label: 'Customers', icon: '👥' },
-  { href: '/admin/subscribers', label: 'Subscribers', icon: '📧' },
-  { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
+const navItems: { href: string; label: string; Icon: React.ComponentType<LucideProps> }[] = [
+  { href: '/admin', label: 'Dashboard', Icon: BarChart3 },
+  { href: '/admin/products', label: 'Products', Icon: Package },
+  { href: '/admin/orders', label: 'Orders', Icon: ShoppingCart },
+  { href: '/admin/customers', label: 'Customers', Icon: Users },
+  { href: '/admin/subscribers', label: 'Subscribers', Icon: Mail },
+  { href: '/admin/settings', label: 'Settings', Icon: Settings },
 ];
 
 export default function AdminSidebar() {
@@ -19,7 +31,7 @@ export default function AdminSidebar() {
     <aside className="w-64 bg-gray-900 text-white min-h-screen flex flex-col shrink-0">
       <div className="p-6 border-b border-gray-800">
         <Link href="/admin" className="flex items-center gap-2 font-bold text-xl">
-          <span className="text-2xl">🛡️</span>
+          <Shield className="w-6 h-6 text-indigo-400" aria-hidden="true" />
           <span>AI Armory Admin</span>
         </Link>
       </div>
@@ -39,7 +51,7 @@ export default function AdminSidebar() {
                   : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
             >
-              <span>{item.icon}</span>
+              <item.Icon className="w-5 h-5" aria-hidden="true" />
               <span className="font-medium">{item.label}</span>
             </Link>
           );
@@ -51,7 +63,7 @@ export default function AdminSidebar() {
           href="/"
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
         >
-          <span>🌐</span>
+          <Globe className="w-5 h-5" aria-hidden="true" />
           <span className="font-medium">View Store</span>
         </Link>
         <form action="/api/admin/logout" method="POST">
@@ -59,7 +71,7 @@ export default function AdminSidebar() {
             type="submit"
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors w-full text-left"
           >
-            <span>🚪</span>
+            <LogOut className="w-5 h-5" aria-hidden="true" />
             <span className="font-medium">Logout</span>
           </button>
         </form>

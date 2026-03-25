@@ -99,10 +99,10 @@ export default async function AdminDashboardPage() {
         {/* Revenue Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { label: 'Today', value: todayRevenue, icon: '💰' },
-            { label: 'This Week', value: weekRevenue, icon: '📈' },
-            { label: 'This Month', value: monthRevenue, icon: '📊' },
-            { label: 'All Time', value: allTimeRevenue, icon: '🏆' },
+            { label: 'Today', value: todayRevenue, icon: 'TD' },
+            { label: 'This Week', value: weekRevenue, icon: 'WK' },
+            { label: 'This Month', value: monthRevenue, icon: 'MO' },
+            { label: 'All Time', value: allTimeRevenue, icon: 'AT' },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-2">

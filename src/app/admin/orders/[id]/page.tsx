@@ -136,7 +136,7 @@ export default function OrderDetailPage() {
                     {order.product_thumbnail ? (
                       <img src={order.product_thumbnail} alt={order.product_name || 'Product'} className="w-16 h-16 rounded-lg object-cover" />
                     ) : (
-                      <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center"><span className="text-2xl">📦</span></div>
+                      <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center"></div>
                     )}
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">{order.product_name || 'Unknown Product'}</p>
@@ -205,7 +205,7 @@ export default function OrderDetailPage() {
                     <h2 className="font-semibold text-red-700 mb-2">Refund Order</h2>
                     <p className="text-sm text-gray-500 mb-4">This will refund the payment via Stripe (if applicable) and revoke the customer&apos;s download access.</p>
                     <button onClick={handleRefund} disabled={refunding} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
-                      {refunding ? 'Processing Refund...' : '💸 Issue Refund'}
+                      {refunding ? 'Processing Refund...' : 'Issue Refund'}
                     </button>
                     {refundMessage && <p className={`text-sm mt-2 ${order.status === 'refunded' ? 'text-green-600' : 'text-red-600'}`}>{refundMessage}</p>}
                   </div>
