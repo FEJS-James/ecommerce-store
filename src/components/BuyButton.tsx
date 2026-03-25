@@ -16,6 +16,8 @@ interface BuyButtonProps {
   className?: string;
   /** If true, force GBP and skip PPP discounts (for services) */
   forceGBP?: boolean;
+  /** If false, the button is disabled and shows a consent reminder */
+  consentGiven?: boolean;
 }
 
 export default function BuyButton({
@@ -23,6 +25,7 @@ export default function BuyButton({
   priceCents,
   className = "",
   forceGBP = false,
+  consentGiven = true,
 }: BuyButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -38,6 +41,7 @@ export default function BuyButton({
     : formatPriceWithCurrency(priceCents, "usd");
 
   async function handleBuy() {
+    if (!consentGiven) return;
     setLoading(true);
     setError("");
 
@@ -72,8 +76,17 @@ export default function BuyButton({
     <div className={className}>
       <button
         onClick={handleBuy}
-        disabled={loading}
-        className="w-full btn-gradient px-8 py-4 rounded-xl font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-2 focus-glow"
+        disabled={loading || !consentGiven}
+        className={`w-full btn-gradient px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 focus-glow ${
+          !consentGiven
+            ? "opacity-50 cursor-not-allowed"
+            : "disabled:opacity-50"
+        }`}
+        title={
+          !consentGiven
+            ? "Please agree to the terms and conditions below before purchasing"
+            : undefined
+        }
       >
         {loading ? (
           <>
@@ -84,6 +97,11 @@ export default function BuyButton({
           <>Buy Now &mdash; {displayPrice}</>
         )}
       </button>
+      {!consentGiven && (
+        <p className="text-zinc-500 text-xs mt-2 text-center">
+          Please agree to the terms below before purchasing
+        </p>
+      )}
       {error && (
         <p className="text-amber-400 text-sm mt-2 text-center">{error}</p>
       )}

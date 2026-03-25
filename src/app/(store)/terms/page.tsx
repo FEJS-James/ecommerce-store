@@ -45,8 +45,7 @@ export default function TermsPage() {
               </li>
               <li>
                 <strong className="text-zinc-200">
-                  &ldquo;Customer&rdquo;, &ldquo;You&rdquo;,
-                  &ldquo;Your&rdquo;
+                  &ldquo;Customer&rdquo;, &ldquo;You&rdquo;, &ldquo;Your&rdquo;
                 </strong>{" "}
                 &mdash; any individual or entity that purchases products or
                 services from us.
@@ -112,8 +111,8 @@ export default function TermsPage() {
             </p>
             <p className="text-zinc-400">
               You may not reproduce, distribute, modify, create derivative works
-              of, publicly display, publicly perform, republish, download, store,
-              or transmit any material from the Site except as expressly
+              of, publicly display, publicly perform, republish, download,
+              store, or transmit any material from the Site except as expressly
               permitted under the licence granted upon purchase (see Section 5).
             </p>
           </section>
@@ -179,8 +178,8 @@ export default function TermsPage() {
                 make reasonable efforts to deliver within the agreed timeframe.
               </li>
               <li>
-                You are responsible for providing accurate information and timely
-                feedback to facilitate service delivery.
+                You are responsible for providing accurate information and
+                timely feedback to facilitate service delivery.
               </li>
             </ul>
           </section>
@@ -241,9 +240,9 @@ export default function TermsPage() {
                 loss of profits, data, business, or goodwill.
               </li>
               <li>
-                Nothing in these terms excludes or limits our liability for death
-                or personal injury caused by our negligence, fraud, or any other
-                liability that cannot be excluded by law.
+                Nothing in these terms excludes or limits our liability for
+                death or personal injury caused by our negligence, fraud, or any
+                other liability that cannot be excluded by law.
               </li>
             </ul>
           </section>
@@ -255,8 +254,8 @@ export default function TermsPage() {
             </h2>
             <p className="text-zinc-400 mb-3">
               Some of our products may require the use of third-party services,
-              APIs, or platforms (including but not limited to OpenAI, Anthropic,
-              Google, and other AI providers).
+              APIs, or platforms (including but not limited to OpenAI,
+              Anthropic, Google, and other AI providers).
             </p>
             <ul className="list-disc list-inside space-y-2 text-zinc-400">
               <li>
@@ -298,9 +297,9 @@ export default function TermsPage() {
             <p className="text-zinc-400">
               If any provision of these Terms &amp; Conditions is found to be
               invalid, illegal, or unenforceable by a court of competent
-              jurisdiction, the remaining provisions shall continue in full force
-              and effect. The invalid provision shall be modified to the minimum
-              extent necessary to make it valid and enforceable.
+              jurisdiction, the remaining provisions shall continue in full
+              force and effect. The invalid provision shall be modified to the
+              minimum extent necessary to make it valid and enforceable.
             </p>
           </section>
 
@@ -311,9 +310,9 @@ export default function TermsPage() {
             </h2>
             <p className="text-zinc-400">
               These Terms &amp; Conditions are governed by and construed in
-              accordance with the laws of England and Wales. Any disputes arising
-              out of or in connection with these terms shall be subject to the
-              exclusive jurisdiction of the courts of England and Wales.
+              accordance with the laws of England and Wales. Any disputes
+              arising out of or in connection with these terms shall be subject
+              to the exclusive jurisdiction of the courts of England and Wales.
             </p>
           </section>
 
