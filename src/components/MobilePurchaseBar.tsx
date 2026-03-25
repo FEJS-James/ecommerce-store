@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import CategoryIcon from "@/components/CategoryIcon";
 import CheckoutConsent from "@/components/CheckoutConsent";
+import PayPalButton from "@/components/PayPalButton";
+import CryptoPayButton from "@/components/CryptoPayButton";
 import { usePricing } from "@/hooks/usePricing";
 import {
   convertCents,
@@ -225,7 +227,7 @@ export default function MobilePurchaseBar({
             <button
               onClick={handleBuy}
               disabled={loading || !consentGiven}
-              className={`w-full btn-gradient px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 focus-glow mb-5 min-h-[48px] ${
+              className={`w-full btn-gradient px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 focus-glow mb-4 min-h-[48px] ${
                 !consentGiven
                   ? "opacity-50 cursor-not-allowed"
                   : "disabled:opacity-50"
@@ -248,6 +250,25 @@ export default function MobilePurchaseBar({
                 <>Buy Now &mdash; {price}</>
               )}
             </button>
+
+            <PayPalButton
+              productId={productId}
+              className="mb-3"
+              consentGiven={consentGiven}
+            />
+
+            <div className="flex items-center gap-3 my-3">
+              <div className="flex-1 h-px bg-zinc-700/50" />
+              <span className="text-zinc-500 text-xs">or</span>
+              <div className="flex-1 h-px bg-zinc-700/50" />
+            </div>
+
+            <CryptoPayButton
+              productId={productId}
+              priceCents={priceCents}
+              className="mb-5"
+              consentGiven={consentGiven}
+            />
 
             <div className="grid grid-cols-2 gap-3 text-sm text-zinc-500 mb-4">
               <div className="flex items-center gap-2">

@@ -27,7 +27,7 @@ function ConsentCheckbox({
           id={id}
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
-          className="sr-only peer"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
         />
         <div
           className="w-5 h-5 rounded border transition-all duration-200 flex items-center justify-center"
