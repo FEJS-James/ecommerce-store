@@ -3,6 +3,7 @@
 import { useState } from "react";
 import BuyButton from "@/components/BuyButton";
 import PayPalButton from "@/components/PayPalButton";
+import CryptoPayButton from "@/components/CryptoPayButton";
 import CheckoutConsent from "@/components/CheckoutConsent";
 
 interface PurchaseActionsProps {
@@ -28,6 +29,17 @@ export default function PurchaseActions({
       />
       <PayPalButton
         productId={productId}
+        className="mb-3"
+        consentGiven={consentGiven}
+      />
+      <div className="flex items-center gap-3 my-3">
+        <div className="flex-1 h-px bg-zinc-700/50" />
+        <span className="text-zinc-500 text-xs">or</span>
+        <div className="flex-1 h-px bg-zinc-700/50" />
+      </div>
+      <CryptoPayButton
+        productId={productId}
+        priceCents={priceCents}
         className="mb-5"
         consentGiven={consentGiven}
       />
