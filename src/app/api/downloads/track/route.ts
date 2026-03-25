@@ -4,9 +4,9 @@ import { execute } from "@/lib/db";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const customerId = typeof body.customer_id === "string" ? body.customer_id : null;
-    const productId = typeof body.product_id === "string" ? body.product_id : null;
-    const orderId = typeof body.order_id === "string" ? body.order_id : null;
+    const customerId = body.customer_id != null ? String(body.customer_id) : null;
+    const productId = body.product_id != null ? String(body.product_id) : null;
+    const orderId = body.order_id != null ? String(body.order_id) : null;
 
     if (!productId) {
       return NextResponse.json({ error: "product_id is required" }, { status: 400 });
