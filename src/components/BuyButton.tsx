@@ -1,40 +1,68 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { usePricing } from "@/hooks/usePricing";
+import {
+  convertCents,
+  formatPriceWithCurrency,
+  getDiscountedPrice,
+} from "@/lib/pricing";
 
 interface BuyButtonProps {
   productId: string;
-  price: string;
+  /** Original price in USD cents */
+  priceCents: number;
   className?: string;
+  /** If true, force GBP and skip PPP discounts (for services) */
+  forceGBP?: boolean;
 }
 
-export default function BuyButton({ productId, price, className = '' }: BuyButtonProps) {
+export default function BuyButton({
+  productId,
+  priceCents,
+  className = "",
+  forceGBP = false,
+}: BuyButtonProps) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const { tier, currency, ready } = usePricing();
+
+  const effectiveCurrency = forceGBP ? "gbp" : currency;
+  const effectiveTier = forceGBP ? 1 : tier;
+
+  const convertedCents = convertCents(priceCents, effectiveCurrency);
+  const finalCents = getDiscountedPrice(convertedCents, effectiveTier);
+  const displayPrice = ready
+    ? formatPriceWithCurrency(finalCents, effectiveCurrency)
+    : formatPriceWithCurrency(priceCents, "usd");
 
   async function handleBuy() {
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId }),
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          currency: effectiveCurrency,
+          tier: effectiveTier,
+        }),
       });
 
       const data = await res.json();
 
       if (data.url) {
         window.location.href = data.url;
-      } else if (data.error === 'stripe_not_configured') {
-        setError('Payments coming soon! Check back shortly.');
+      } else if (data.error === "stripe_not_configured") {
+        setError("Payments coming soon! Check back shortly.");
       } else {
-        setError(data.error || 'Something went wrong');
+        setError(data.error || "Something went wrong");
       }
     } catch {
-      setError('Network error. Please try again.');
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +81,7 @@ export default function BuyButton({ productId, price, className = '' }: BuyButto
             Processing...
           </>
         ) : (
-          <>Buy Now — {price}</>
+          <>Buy Now &mdash; {displayPrice}</>
         )}
       </button>
       {error && (
