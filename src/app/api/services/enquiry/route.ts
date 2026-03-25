@@ -1,59 +1,56 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+interface EnquiryBody {
+  name: string;
+  email: string;
+  company?: string;
+  message: string;
+  serviceName: string;
+  servicePrice: number;
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as EnquiryBody;
 
-    const { name, email, description, serviceName, businessName, contactMethod } = body;
+    const { name, email, message, serviceName } = body;
 
-    // Validate required fields
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
+    if (!name || !email || !message || !serviceName) {
       return NextResponse.json(
-        { success: false, message: "Name is required" },
+        { error: "Name, email, message, and service are required" },
         { status: 400 }
       );
     }
 
-    if (!email || typeof email !== "string" || !email.includes("@")) {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { success: false, message: "A valid email is required" },
+        { error: "Invalid email address" },
         { status: 400 }
       );
     }
 
-    if (!description || typeof description !== "string" || description.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, message: "Description is required" },
-        { status: 400 }
-      );
-    }
-
-    if (!serviceName || typeof serviceName !== "string") {
-      return NextResponse.json(
-        { success: false, message: "Service name is required" },
-        { status: 400 }
-      );
-    }
-
-    // Log the enquiry for now — email integration later
+    // Log the enquiry (in production, this would save to DB or send email)
     console.log("[Service Enquiry]", {
-      serviceName,
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      businessName: businessName?.trim() || null,
-      description: description.trim(),
-      contactMethod: contactMethod || "email",
+      name,
+      email,
+      company: body.company || "N/A",
+      service: serviceName,
+      price: body.servicePrice,
+      message: message.substring(0, 200),
       timestamp: new Date().toISOString(),
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Enquiry received",
-    });
-  } catch {
     return NextResponse.json(
-      { success: false, message: "Invalid request" },
-      { status: 400 }
+      { success: true, message: "Enquiry received" },
+      { status: 200 }
+    );
+  } catch {
+    console.error("[Service Enquiry] Error processing request");
+    return NextResponse.json(
+      { error: "Failed to process enquiry" },
+      { status: 500 }
     );
   }
 }
