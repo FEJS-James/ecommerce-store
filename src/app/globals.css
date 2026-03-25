@@ -70,6 +70,20 @@ body {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
 }
 
+/* Download button glow */
+.download-btn-glow {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6, #06B6D4);
+  color: white;
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.download-btn-glow:hover {
+  background: linear-gradient(135deg, #818CF8, #A78BFA, #22D3EE);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.5), 0 4px 24px rgba(0, 0, 0, 0.4);
+  transform: scale(1.02);
+}
+
 /* Ghost button */
 .btn-ghost {
   background: rgba(255, 255, 255, 0.05);
