@@ -150,9 +150,15 @@ export default function PayPalButton({
             // User closed the PayPal popup — no action needed
           },
         })
-        .render(containerRef.current!);
+        .render(containerRef.current!)
+        .catch((err: unknown) => {
+          console.error("PayPal Buttons render failed:", err);
+          renderedRef.current = false;
+          setError("PayPal is temporarily unavailable. Please use another payment method.");
+        });
     } catch (err) {
-      console.error("PayPal Buttons render failed:", err);
+      // Catches synchronous Buttons() constructor errors
+      console.error("PayPal Buttons init failed:", err);
       renderedRef.current = false;
       setError("PayPal is temporarily unavailable. Please use another payment method.");
     }
