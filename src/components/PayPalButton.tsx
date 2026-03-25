@@ -49,6 +49,28 @@ function loadPayPalSDK(clientId: string): Promise<void> {
   return sdkPromise;
 }
 
+/**
+ * Fetches the PayPal client ID from a runtime API endpoint.
+ * This avoids the Next.js build-time inlining problem with
+ * NEXT_PUBLIC_* env vars -- the value is read server-side at
+ * request time, so it works even if set after deployment.
+ */
+async function fetchClientId(): Promise<string | null> {
+  // First, check the build-time value (works when env var was present at build)
+  const buildTime = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  if (buildTime) return buildTime;
+
+  // Fall back to runtime endpoint
+  try {
+    const res = await fetch("/api/config/paypal", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.clientId ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function PayPalButton({
   productId,
   className = "",
@@ -57,11 +79,35 @@ export default function PayPalButton({
   const [error, setError] = useState("");
   const [sdkReady, setSdkReady] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [clientId, setClientId] = useState<string | null>(
+    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? null,
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const renderedRef = useRef(false);
 
-  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  // Resolve client ID (build-time or runtime fallback)
+  useEffect(() => {
+    let cancelled = false;
 
+    if (clientId) {
+      // Already have it from build-time env var
+      setLoading(false);
+      return;
+    }
+
+    fetchClientId().then((id) => {
+      if (cancelled) return;
+      setClientId(id);
+      setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load the PayPal SDK once we have a client ID
   useEffect(() => {
     if (!clientId) return;
 
@@ -147,20 +193,24 @@ export default function PayPalButton({
             );
           },
           onCancel: () => {
-            // User closed the PayPal popup — no action needed
+            // User closed the PayPal popup -- no action needed
           },
         })
         .render(containerRef.current!)
         .catch((err: unknown) => {
           console.error("PayPal Buttons render failed:", err);
           renderedRef.current = false;
-          setError("PayPal is temporarily unavailable. Please use another payment method.");
+          setError(
+            "PayPal is temporarily unavailable. Please use another payment method.",
+          );
         });
     } catch (err) {
       // Catches synchronous Buttons() constructor errors
       console.error("PayPal Buttons init failed:", err);
       renderedRef.current = false;
-      setError("PayPal is temporarily unavailable. Please use another payment method.");
+      setError(
+        "PayPal is temporarily unavailable. Please use another payment method.",
+      );
     }
   }, [productId]);
 
@@ -170,12 +220,25 @@ export default function PayPalButton({
     }
   }, [sdkReady, renderButtons]);
 
-  if (!clientId) {
-    return null; // PayPal not configured — don't show anything
+  // Always render the container so the UI never silently hides PayPal.
+  // Show a loading placeholder while the SDK is being fetched / resolved.
+  // If client ID is genuinely absent (not configured), hide gracefully.
+  if (!loading && !clientId) {
+    // PayPal is not configured at all -- nothing to show
+    return null;
   }
 
   return (
     <div className={className}>
+      {/* "or pay with PayPal" divider -- always visible while loading or ready */}
+      {(loading || !sdkReady) && !capturing && !error && (
+        <div className="flex items-center gap-3 my-2">
+          <div className="flex-1 border-t border-zinc-700" />
+          <span className="text-zinc-400 text-sm">or pay with PayPal</span>
+          <div className="flex-1 border-t border-zinc-700" />
+        </div>
+      )}
+
       {capturing && (
         <div className="flex items-center justify-center gap-2 py-4 text-zinc-400">
           <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
@@ -197,7 +260,15 @@ export default function PayPalButton({
           Completing your purchase...
         </div>
       )}
-      <div className={`relative ${capturing ? "hidden" : ""}`}>
+
+      {/* Loading skeleton while SDK initializes */}
+      {loading && !capturing && (
+        <div className="h-[55px] rounded bg-zinc-800 animate-pulse flex items-center justify-center">
+          <span className="text-zinc-500 text-sm">Loading PayPal...</span>
+        </div>
+      )}
+
+      <div className={`relative ${capturing || loading ? "hidden" : ""}`}>
         {!consentGiven && (
           <div
             className="absolute inset-0 z-10 rounded-lg"
