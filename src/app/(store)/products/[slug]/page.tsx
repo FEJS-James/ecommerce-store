@@ -498,6 +498,32 @@ export default async function ProductPage({ params }: PageProps) {
                   </div>
                 </div>
               )}
+
+              {product.preview_url && (
+                <div className="mt-4 rounded-xl p-4 border border-indigo-500/20 bg-indigo-500/[0.04] backdrop-blur-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText
+                      className="w-4 h-4 text-indigo-400"
+                      aria-hidden="true"
+                    />
+                    <h3 className="text-sm font-semibold text-white">
+                      What&apos;s Inside
+                    </h3>
+                  </div>
+                  <p className="text-xs text-zinc-400 mb-3">
+                    Preview &mdash; See what&apos;s included before you buy
+                  </p>
+                  <a
+                    href={product.preview_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5" aria-hidden="true" />
+                    View Preview PDF
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>

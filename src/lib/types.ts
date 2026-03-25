@@ -16,6 +16,7 @@ export interface Product {
   stripe_price_id: string | null;
   status: string;
   featured: number;
+  preview_url: string | null;
   download_count: number;
   created_at: string;
   updated_at: string;
@@ -26,7 +27,7 @@ export interface Order {
   stripe_session_id: string | null;
   stripe_payment_intent: string | null;
   paypal_order_id: string | null;
-  payment_method: 'stripe' | 'paypal' | 'crypto';
+  payment_method: "stripe" | "paypal" | "crypto";
   customer_email: string;
   customer_name: string | null;
   customer_id: string | null;
@@ -66,7 +67,7 @@ export interface EmailSubscriber {
   lead_magnet: string | null;
   subscribed_at: string;
   unsubscribed_at: string | null;
-  status: 'active' | 'unsubscribed';
+  status: "active" | "unsubscribed";
 }
 
 export interface OrderItem {

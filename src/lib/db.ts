@@ -236,6 +236,16 @@ export async function initializeDb(): Promise<void> {
     // Column already exists
   }
 
+  // Migration: add preview_url to products for PDF preview links
+  try {
+    await db.execute({
+      sql: `ALTER TABLE products ADD COLUMN preview_url TEXT`,
+      args: [],
+    });
+  } catch {
+    // Column already exists
+  }
+
   // Create indexes for frequently queried columns
   const indexes = [
     "CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id)",

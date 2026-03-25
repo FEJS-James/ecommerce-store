@@ -129,7 +129,7 @@ export default function ServicesSection() {
                       backgroundClip: "text",
                     }}
                   >
-                    &pound;{tier.price}
+                    ${tier.price}
                   </p>
                   <p className="text-zinc-400 text-sm leading-relaxed mb-5">
                     {tier.description}

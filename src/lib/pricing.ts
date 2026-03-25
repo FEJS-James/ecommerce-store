@@ -1,5 +1,6 @@
 export type PricingTier = 1 | 2 | 3;
-export type SupportedCurrency = "usd" | "gbp" | "eur";
+// All prices are displayed in USD. Legacy type kept for compatibility.
+export type SupportedCurrency = "usd";
 
 interface TierInfo {
   tier: PricingTier;
@@ -8,13 +9,31 @@ interface TierInfo {
   couponCode: string | null;
 }
 
-// Tier 1 — Full Price
-const TIER_1_USD_COUNTRIES = ["US", "CA", "AU", "NZ", "SG", "HK"];
-const TIER_1_GBP_COUNTRIES = ["GB", "IE"];
-const TIER_1_EUR_COUNTRIES = ["NL", "SE", "NO", "DK", "FI", "DE", "CH", "AT"];
-const TIER_1_USD_OTHER = ["AE", "IL", "JP", "KR"];
+// Tier 1 -- Full Price (all major economies)
+const TIER_1_COUNTRIES = [
+  "US",
+  "CA",
+  "AU",
+  "NZ",
+  "SG",
+  "HK",
+  "GB",
+  "IE",
+  "NL",
+  "SE",
+  "NO",
+  "DK",
+  "FI",
+  "DE",
+  "CH",
+  "AT",
+  "AE",
+  "IL",
+  "JP",
+  "KR",
+];
 
-// Tier 2 — 30% Discount (USD)
+// Tier 2 -- 30% PPP Discount (USD)
 const TIER_2_COUNTRIES = [
   "IN",
   "PH",
@@ -34,39 +53,15 @@ const TIER_2_COUNTRIES = [
   "BG",
 ];
 
-// Tier 3 — 50% Discount (USD)
+// Tier 3 -- 50% PPP Discount (USD)
 const TIER_3_COUNTRIES = ["UG", "TZ", "ZW", "ZM", "RW", "ET", "NP", "MM", "KH"];
 
 const COUNTRY_TIER_MAP = new Map<string, TierInfo>();
 
-for (const code of TIER_1_USD_COUNTRIES) {
+for (const code of TIER_1_COUNTRIES) {
   COUNTRY_TIER_MAP.set(code, {
     tier: 1,
     currency: "usd",
-    discountPct: 0,
-    couponCode: null,
-  });
-}
-for (const code of TIER_1_USD_OTHER) {
-  COUNTRY_TIER_MAP.set(code, {
-    tier: 1,
-    currency: "usd",
-    discountPct: 0,
-    couponCode: null,
-  });
-}
-for (const code of TIER_1_GBP_COUNTRIES) {
-  COUNTRY_TIER_MAP.set(code, {
-    tier: 1,
-    currency: "gbp",
-    discountPct: 0,
-    couponCode: null,
-  });
-}
-for (const code of TIER_1_EUR_COUNTRIES) {
-  COUNTRY_TIER_MAP.set(code, {
-    tier: 1,
-    currency: "eur",
     discountPct: 0,
     couponCode: null,
   });
@@ -107,11 +102,9 @@ export function getTierForCountry(
   return COUNTRY_TIER_MAP.get(countryCode.toUpperCase()) ?? DEFAULT_TIER_INFO;
 }
 
-// Hardcoded approximate conversion rates: 1 USD = X currency
+// All prices are USD -- no multi-currency conversion needed.
 const CURRENCY_RATES: Record<SupportedCurrency, number> = {
   usd: 1,
-  gbp: 0.79,
-  eur: 0.92,
 };
 
 const CURRENCY_CONFIG: Record<
@@ -119,8 +112,6 @@ const CURRENCY_CONFIG: Record<
   { locale: string; code: string }
 > = {
   usd: { locale: "en-US", code: "USD" },
-  gbp: { locale: "en-GB", code: "GBP" },
-  eur: { locale: "de-DE", code: "EUR" },
 };
 
 /**
@@ -188,9 +179,8 @@ export function parsePricingContext(values: {
   const tierNum = parseInt(values.tier || "1", 10);
   const tier: PricingTier = tierNum === 2 ? 2 : tierNum === 3 ? 3 : 1;
 
-  const rawCurrency = (values.currency || "usd").toLowerCase();
-  const currency: SupportedCurrency =
-    rawCurrency === "gbp" ? "gbp" : rawCurrency === "eur" ? "eur" : "usd";
+  // All display prices are USD regardless of geo cookie value.
+  const currency: SupportedCurrency = "usd";
 
   const discountPct = parseInt(values.discountPct || "0", 10);
 

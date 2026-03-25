@@ -26,15 +26,13 @@ export function usePricing(): PricingState {
 
   useEffect(() => {
     const tierRaw = getCookie("x-pricing-tier");
-    const currencyRaw = getCookie("x-currency");
     const discountRaw = getCookie("x-discount-pct");
 
     const tierNum = parseInt(tierRaw || "1", 10);
     const tier: PricingTier = tierNum === 2 ? 2 : tierNum === 3 ? 3 : 1;
 
-    const rawCurrency = (currencyRaw || "usd").toLowerCase();
-    const currency: SupportedCurrency =
-      rawCurrency === "gbp" ? "gbp" : rawCurrency === "eur" ? "eur" : "usd";
+    // All display prices are USD regardless of geo location.
+    const currency: SupportedCurrency = "usd";
 
     const discountPct = parseInt(discountRaw || "0", 10);
 
