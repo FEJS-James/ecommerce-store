@@ -22,7 +22,7 @@ const pillars = [
       "M2 9h20M2 15h20M4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2zM8 12h.01M8 18h.01",
   },
   {
-    title: "From £19 Products to £1,999 Done-For-You",
+    title: "From $19 Products to $1,999 Done-For-You",
     description:
       "Whether you want a DIY blueprint or a full enterprise rollout, we have the right option for your budget and timeline.",
     accent: "#06B6D4",

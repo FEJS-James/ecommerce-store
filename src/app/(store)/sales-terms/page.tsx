@@ -157,7 +157,7 @@ export default function SalesTermsPage() {
               </li>
               <li>
                 Service prices are quoted in{" "}
-                <strong className="text-zinc-200">GBP</strong>.
+                <strong className="text-zinc-200">USD</strong>.
               </li>
               <li>
                 All prices are inclusive of VAT where applicable (see Section

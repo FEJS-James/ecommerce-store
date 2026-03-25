@@ -42,7 +42,7 @@ const FAQ_CATEGORIES: FAQCategory[] = [
       {
         question: "What currency are prices shown in?",
         answer:
-          "Digital products are priced in USD. Services are priced in GBP. Regional pricing is applied automatically based on your location.",
+          "All prices are in USD. Regional pricing is applied automatically based on your location.",
       },
       {
         question: "Do you offer a money-back guarantee?",
@@ -68,7 +68,7 @@ const FAQ_CATEGORIES: FAQCategory[] = [
       {
         question: "Can I pay in instalments?",
         answer:
-          "For services over \u00a3500, we offer a 50/50 payment split: half upfront and half on completion.",
+          "For services over $500, we offer a 50/50 payment split: half upfront and half on completion.",
       },
     ],
   },

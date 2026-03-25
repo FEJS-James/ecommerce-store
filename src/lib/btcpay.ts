@@ -36,8 +36,8 @@ export async function createBTCPayInvoice(params: CreateInvoiceParams): Promise<
       'Authorization': `token ${process.env.BTCPAY_API_KEY}`,
     },
     body: JSON.stringify({
-      amount: (params.amount / 100).toFixed(2), // cents → pounds
-      currency: 'GBP',
+      amount: (params.amount / 100).toFixed(2), // cents → dollars
+      currency: 'USD',
       metadata: {
         productId: params.productId,
         orderId: params.orderId,
