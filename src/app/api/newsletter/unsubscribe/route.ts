@@ -17,8 +17,6 @@ export function generateUnsubscribeToken(email: string): string {
 function verifyUnsubscribeToken(email: string, token: string): boolean {
   const expected = generateUnsubscribeToken(email);
   if (expected.length !== token.length) return false;
-
-  // Constant-time comparison
   let mismatch = 0;
   for (let i = 0; i < expected.length; i++) {
     mismatch |= expected.charCodeAt(i) ^ token.charCodeAt(i);
@@ -72,27 +70,15 @@ export async function GET(request: NextRequest) {
 
   if (!email || !token) {
     return new NextResponse(
-      htmlPage(
-        "Invalid Link",
-        "This unsubscribe link is invalid or incomplete.",
-      ),
-      {
-        status: 400,
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      },
+      htmlPage("Invalid Link", "This unsubscribe link is invalid or incomplete."),
+      { status: 400, headers: { "Content-Type": "text/html; charset=utf-8" } },
     );
   }
 
   if (!verifyUnsubscribeToken(email, token)) {
     return new NextResponse(
-      htmlPage(
-        "Invalid Token",
-        "This unsubscribe link is invalid or has been tampered with.",
-      ),
-      {
-        status: 403,
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      },
+      htmlPage("Invalid Token", "This unsubscribe link is invalid or has been tampered with."),
+      { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } },
     );
   }
 
@@ -104,27 +90,15 @@ export async function GET(request: NextRequest) {
 
     if (!subscriber) {
       return new NextResponse(
-        htmlPage(
-          "Not Found",
-          "This email address was not found in our subscriber list.",
-        ),
-        {
-          status: 404,
-          headers: { "Content-Type": "text/html; charset=utf-8" },
-        },
+        htmlPage("Not Found", "This email address was not found in our subscriber list."),
+        { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } },
       );
     }
 
     if (subscriber.status === "unsubscribed") {
       return new NextResponse(
-        htmlPage(
-          "Already Unsubscribed",
-          "You have already been unsubscribed from our newsletter.",
-        ),
-        {
-          status: 200,
-          headers: { "Content-Type": "text/html; charset=utf-8" },
-        },
+        htmlPage("Already Unsubscribed", "You have already been unsubscribed from our newsletter."),
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
       );
     }
 
@@ -136,23 +110,14 @@ export async function GET(request: NextRequest) {
     );
 
     return new NextResponse(
-      htmlPage(
-        "Unsubscribed",
-        "You have been successfully unsubscribed from our newsletter. You will no longer receive emails from us.",
-      ),
-      {
-        status: 200,
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      },
+      htmlPage("Unsubscribed", "You have been successfully unsubscribed from our newsletter. You will no longer receive emails from us."),
+      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
     );
   } catch (error) {
     console.error("Unsubscribe error:", error);
     return new NextResponse(
       htmlPage("Error", "Something went wrong. Please try again later."),
-      {
-        status: 500,
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      },
+      { status: 500, headers: { "Content-Type": "text/html; charset=utf-8" } },
     );
   }
 }

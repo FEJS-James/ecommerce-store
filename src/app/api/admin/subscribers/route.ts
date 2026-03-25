@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
       where += " AND es.status = ?";
       args.push(status);
     } else {
-      // Default: only active subscribers unless explicitly filtered
       where += " AND es.status = 'active'";
     }
     if (startDate) {
@@ -59,15 +58,7 @@ export async function GET(request: NextRequest) {
 
     if (format === "csv") {
       const safeSubscribers = Array.isArray(subscribers) ? subscribers : [];
-      const headers = [
-        "email",
-        "name",
-        "source",
-        "lead_magnet",
-        "status",
-        "subscribed_at",
-        "unsubscribed_at",
-      ];
+      const headers = ["email", "name", "source", "lead_magnet", "status", "subscribed_at", "unsubscribed_at"];
       const csvRows = [headers.join(",")];
 
       for (const sub of safeSubscribers) {
@@ -97,9 +88,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Subscribers error:", error);
-    return NextResponse.json(
-      { error: "Failed to load subscribers" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to load subscribers" }, { status: 500 });
   }
 }
