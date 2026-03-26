@@ -8,6 +8,9 @@
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
+// Vercel serverless: disable GPU/graphics stack (not available in Lambda)
+chromium.setGraphicsMode = false;
+
 const DEFAULT_VIEWPORT = { width: 1280, height: 720 };
 
 const PDF_OPTIONS = {
@@ -23,8 +26,11 @@ const PDF_OPTIONS = {
 
 /** Resolve the Chromium executable path for the current environment. */
 async function getExecutablePath(): Promise<string> {
+  // On Vercel serverless, extract to /tmp (the only writable directory)
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return await chromium.executablePath('/tmp/chromium');
+  }
   return (
-    (await chromium.executablePath()) ||
     process.env.CHROME_EXECUTABLE_PATH ||
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
   );

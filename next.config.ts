@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: [],
+  serverExternalPackages: ['@sparticuz/chromium'],
 };
 
 export default nextConfig;
