@@ -26,9 +26,8 @@ const PDF_OPTIONS = {
 
 /** Resolve the Chromium executable path for the current environment. */
 async function getExecutablePath(): Promise<string> {
-  // On Vercel serverless, extract to /tmp (the only writable directory)
   if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    return await chromium.executablePath('/tmp/chromium');
+    return await chromium.executablePath();
   }
   return (
     process.env.CHROME_EXECUTABLE_PATH ||
