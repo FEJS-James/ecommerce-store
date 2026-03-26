@@ -8,41 +8,81 @@
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
+const DEFAULT_VIEWPORT = { width: 1280, height: 720 };
+
+const PDF_OPTIONS = {
+  format: 'A4' as const,
+  printBackground: true,
+  margin: {
+    top: '25mm',
+    right: '20mm',
+    bottom: '30mm',
+    left: '20mm',
+  },
+};
+
+/** Resolve the Chromium executable path for the current environment. */
+async function getExecutablePath(): Promise<string> {
+  return (
+    (await chromium.executablePath()) ||
+    process.env.CHROME_EXECUTABLE_PATH ||
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+  );
+}
+
 /**
- * Render an HTML string to a PDF buffer (A4, print-ready).
+ * Render a single HTML string to a PDF buffer (A4, print-ready).
+ * Launches and closes its own Chromium instance — prefer `htmlToPdfBatch`
+ * when converting multiple documents.
  */
 export async function htmlToPdf(html: string): Promise<Buffer> {
-  // @sparticuz/chromium sets this env in Vercel; locally fall back to common paths
-  const executablePath = await chromium.executablePath()
-    || process.env.CHROME_EXECUTABLE_PATH
-    || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  const executablePath = await getExecutablePath();
 
   const browser = await puppeteer.launch({
     args: chromium.args,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    defaultViewport: (chromium as any).defaultViewport ?? { width: 1280, height: 720 },
+    defaultViewport: DEFAULT_VIEWPORT,
     executablePath,
     headless: true,
   });
 
   try {
     const page = await browser.newPage();
-
     await page.setContent(html, { waitUntil: 'networkidle0' });
-
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '25mm',
-        right: '20mm',
-        bottom: '30mm',
-        left: '20mm',
-      },
-    });
-
-    // page.pdf returns a Uint8Array in newer puppeteer; ensure we return a Buffer
+    const pdfBuffer = await page.pdf(PDF_OPTIONS);
     return Buffer.from(pdfBuffer);
+  } finally {
+    await browser.close();
+  }
+}
+
+/**
+ * Render multiple HTML documents to PDF buffers using a SINGLE Chromium
+ * instance. Each document gets its own page (opened then closed) to keep
+ * memory bounded while avoiding the cost of launching Chromium per file.
+ */
+export async function htmlToPdfBatch(htmlDocs: string[]): Promise<Buffer[]> {
+  if (htmlDocs.length === 0) return [];
+  if (htmlDocs.length === 1) return [await htmlToPdf(htmlDocs[0])];
+
+  const executablePath = await getExecutablePath();
+
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: DEFAULT_VIEWPORT,
+    executablePath,
+    headless: true,
+  });
+
+  try {
+    const results: Buffer[] = [];
+    for (const html of htmlDocs) {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      const pdf = await page.pdf(PDF_OPTIONS);
+      results.push(Buffer.from(pdf));
+      await page.close(); // free page memory
+    }
+    return results;
   } finally {
     await browser.close();
   }

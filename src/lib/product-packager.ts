@@ -5,7 +5,7 @@
 
 import AdmZip from 'adm-zip';
 import { markdownToBrandedHTML } from '@/lib/pdf-template';
-import { htmlToPdf } from '@/lib/pdf-generator';
+import { htmlToPdfBatch } from '@/lib/pdf-generator';
 import { uploadToBlob, deleteFromBlob, isBlobConfigured } from '@/lib/blob';
 import { queryOne, execute } from '@/lib/db';
 
@@ -32,6 +32,13 @@ export interface RepackageResult {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/** Sanitize a ZIP entry path — reject traversal attempts. */
+function sanitizePath(name: string): string | null {
+  const normalized = name.replace(/\\/g, '/');
+  if (normalized.startsWith('/') || normalized.includes('..')) return null;
+  return normalized;
+}
 
 /** Check whether a filename is a markdown/text file we should convert. */
 function isConvertible(name: string): boolean {
@@ -97,23 +104,25 @@ export async function repackageProduct(
   for (const entry of entries) {
     if (entry.isDirectory) continue;
 
-    // Get the relative path (strip any leading folder if it exists)
-    const name = entry.entryName;
+    // Sanitize path — reject traversal attempts
+    const safePath = sanitizePath(entry.entryName);
+    if (!safePath) continue;
 
     // Skip macOS resource forks and hidden files
-    if (name.includes('__MACOSX') || name.split('/').some(p => p.startsWith('.'))) {
+    if (safePath.includes('__MACOSX') || safePath.split('/').some(p => p.startsWith('.'))) {
       continue;
     }
 
-    if (isConvertible(name)) {
-      convertibleEntries.push({ entry, relativePath: name });
+    if (isConvertible(safePath)) {
+      convertibleEntries.push({ entry, relativePath: safePath });
     } else {
-      otherEntries.push({ entry, relativePath: name });
+      otherEntries.push({ entry, relativePath: safePath });
     }
   }
 
-  // 5. Convert each .md/.txt to PDF
-  const pdfResults: { name: string; buffer: Buffer }[] = [];
+  // 5. Convert each .md/.txt to PDF (batch: single Chromium instance)
+  const pdfMeta: { name: string }[] = [];
+  const htmlDocs: string[] = [];
 
   for (const { entry, relativePath } of convertibleEntries) {
     const content = entry.getData().toString('utf-8');
@@ -127,9 +136,15 @@ export async function repackageProduct(
       subtitle: baseName.replace(/\.(md|txt|markdown)$/i, ''),
     });
 
-    const pdfBuffer = await htmlToPdf(html);
-    pdfResults.push({ name: pdfName, buffer: pdfBuffer });
+    htmlDocs.push(html);
+    pdfMeta.push({ name: pdfName });
   }
+
+  const pdfBuffers = await htmlToPdfBatch(htmlDocs);
+  const pdfResults = pdfMeta.map((meta, i) => ({
+    name: meta.name,
+    buffer: pdfBuffers[i],
+  }));
 
   // 6. Build new ZIP
   const newZip = new AdmZip();

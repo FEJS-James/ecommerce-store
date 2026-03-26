@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { queryAll } from '@/lib/db';
 import { isAuthenticated } from '@/lib/auth';
 import { isBlobConfigured } from '@/lib/blob';
@@ -6,13 +6,16 @@ import { repackageProduct, type RepackageResult } from '@/lib/product-packager';
 
 export const maxDuration = 300;
 
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 50;
+
 interface ProductRow {
   id: string;
   name: string;
   file_url: string | null;
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -25,8 +28,16 @@ export async function POST() {
   }
 
   try {
+    // Parse limit from query params (default 10, max 50)
+    const limitParam = request.nextUrl.searchParams.get('limit');
+    const limit = Math.min(
+      Math.max(1, limitParam ? parseInt(limitParam, 10) || DEFAULT_LIMIT : DEFAULT_LIMIT),
+      MAX_LIMIT,
+    );
+
     const products = await queryAll<ProductRow>(
-      "SELECT id, name, file_url FROM products WHERE status = 'active' AND file_url IS NOT NULL",
+      "SELECT id, name, file_url FROM products WHERE status = 'active' AND file_url IS NOT NULL LIMIT ?",
+      [limit],
     );
 
     const results: {
@@ -64,6 +75,8 @@ export async function POST() {
         total: products.length,
         succeeded,
         failed,
+        limit,
+        hint: `Pass ?limit=N (1–${MAX_LIMIT}) to control batch size. Default: ${DEFAULT_LIMIT}.`,
       },
       results,
     });
