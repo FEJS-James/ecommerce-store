@@ -1,0 +1,185 @@
+/**
+ * Product repackaging: downloads a product ZIP, converts .md/.txt to branded
+ * PDFs, and re-uploads a new ZIP with PDFs/ + Raw-Files/ folders.
+ */
+
+import AdmZip from 'adm-zip';
+import { markdownToBrandedHTML } from '@/lib/pdf-template';
+import { htmlToPdf } from '@/lib/pdf-generator';
+import { uploadToBlob, deleteFromBlob, isBlobConfigured } from '@/lib/blob';
+import { queryOne, execute } from '@/lib/db';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface ProductRecord {
+  id: string;
+  name: string;
+  file_url: string | null;
+  file_name: string | null;
+  [key: string]: unknown;
+}
+
+export interface RepackageResult {
+  url: string;
+  size: number;
+  pdfCount: number;
+  rawFileCount: number;
+  otherFileCount: number;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Check whether a filename is a markdown/text file we should convert. */
+function isConvertible(name: string): boolean {
+  const lower = name.toLowerCase();
+  return lower.endsWith('.md') || lower.endsWith('.txt') || lower.endsWith('.markdown');
+}
+
+/** Derive a PDF filename from the original (e.g. guide.md → guide.pdf). */
+function toPdfName(name: string): string {
+  return name.replace(/\.(md|txt|markdown)$/i, '.pdf');
+}
+
+/** Detect variant from filename. */
+function detectVariant(name: string): 'guide' | 'cheatsheet' | 'workbook' {
+  const lower = name.toLowerCase();
+  if (lower.includes('cheat') || lower.includes('cheatsheet')) return 'cheatsheet';
+  if (lower.includes('workbook')) return 'workbook';
+  return 'guide';
+}
+
+// ---------------------------------------------------------------------------
+// Main function
+// ---------------------------------------------------------------------------
+
+/**
+ * Repackage a product's download file:
+ * 1. Download current ZIP from blob storage
+ * 2. Extract .md/.txt → convert to branded PDFs
+ * 3. Build new ZIP: PDFs/ + Raw-Files/ + other files at root
+ * 4. Upload new ZIP, delete old, update DB
+ */
+export async function repackageProduct(
+  productId: string,
+  productName: string,
+): Promise<RepackageResult> {
+  if (!isBlobConfigured()) {
+    throw new Error('Blob storage not configured');
+  }
+
+  // 1. Fetch product record
+  const product = await queryOne<ProductRecord>(
+    'SELECT * FROM products WHERE id = ?',
+    [productId],
+  );
+  if (!product) throw new Error(`Product ${productId} not found`);
+  if (!product.file_url) throw new Error(`Product ${productId} has no file`);
+
+  // 2. Download current ZIP
+  const response = await fetch(product.file_url);
+  if (!response.ok) {
+    throw new Error(`Failed to download product file: ${response.status} ${response.statusText}`);
+  }
+  const zipBuffer = Buffer.from(await response.arrayBuffer());
+
+  // 3. Read the ZIP
+  const sourceZip = new AdmZip(zipBuffer);
+  const entries = sourceZip.getEntries();
+
+  // 4. Categorize entries
+  const convertibleEntries: { entry: AdmZip.IZipEntry; relativePath: string }[] = [];
+  const otherEntries: { entry: AdmZip.IZipEntry; relativePath: string }[] = [];
+
+  for (const entry of entries) {
+    if (entry.isDirectory) continue;
+
+    // Get the relative path (strip any leading folder if it exists)
+    const name = entry.entryName;
+
+    // Skip macOS resource forks and hidden files
+    if (name.includes('__MACOSX') || name.split('/').some(p => p.startsWith('.'))) {
+      continue;
+    }
+
+    if (isConvertible(name)) {
+      convertibleEntries.push({ entry, relativePath: name });
+    } else {
+      otherEntries.push({ entry, relativePath: name });
+    }
+  }
+
+  // 5. Convert each .md/.txt to PDF
+  const pdfResults: { name: string; buffer: Buffer }[] = [];
+
+  for (const { entry, relativePath } of convertibleEntries) {
+    const content = entry.getData().toString('utf-8');
+    const baseName = relativePath.split('/').pop() || relativePath;
+    const pdfName = toPdfName(baseName);
+    const variant = detectVariant(baseName);
+
+    const html = markdownToBrandedHTML(content, {
+      title: productName,
+      variant,
+      subtitle: baseName.replace(/\.(md|txt|markdown)$/i, ''),
+    });
+
+    const pdfBuffer = await htmlToPdf(html);
+    pdfResults.push({ name: pdfName, buffer: pdfBuffer });
+  }
+
+  // 6. Build new ZIP
+  const newZip = new AdmZip();
+
+  // PDFs/ folder
+  for (const { name, buffer } of pdfResults) {
+    newZip.addFile(`PDFs/${name}`, buffer);
+  }
+
+  // Raw-Files/ folder — original .md/.txt files
+  for (const { entry, relativePath } of convertibleEntries) {
+    const baseName = relativePath.split('/').pop() || relativePath;
+    newZip.addFile(`Raw-Files/${baseName}`, entry.getData());
+  }
+
+  // Other files at root (or preserve their relative path)
+  for (const { entry, relativePath } of otherEntries) {
+    newZip.addFile(relativePath, entry.getData());
+  }
+
+  const newZipBuffer = newZip.toBuffer();
+
+  // 7. Upload new ZIP to blob
+  const newFileName = product.file_name
+    ? product.file_name.replace(/\.zip$/i, '-with-pdfs.zip')
+    : `${productName.replace(/[^a-zA-Z0-9-_ ]/g, '').trim()}-with-pdfs.zip`;
+
+  const blob = await uploadToBlob(newFileName, newZipBuffer, {
+    contentType: 'application/zip',
+    folder: `products/${productId}`,
+  });
+
+  // 8. Delete old ZIP from blob
+  try {
+    await deleteFromBlob(product.file_url);
+  } catch {
+    // Non-critical: old file may already be gone
+  }
+
+  // 9. Update DB
+  await execute(
+    `UPDATE products SET file_url = ?, file_name = ?, file_size_bytes = ?, updated_at = datetime('now') WHERE id = ?`,
+    [blob.url, newFileName, newZipBuffer.length, productId],
+  );
+
+  return {
+    url: blob.url,
+    size: newZipBuffer.length,
+    pdfCount: pdfResults.length,
+    rawFileCount: convertibleEntries.length,
+    otherFileCount: otherEntries.length,
+  };
+}

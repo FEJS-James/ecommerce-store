@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryOne, execute } from '@/lib/db';
 import { isAuthenticated } from '@/lib/auth';
 import { archiveStripeProduct, reactivateStripeProduct, createStripeProduct } from '@/lib/stripe-sync';
+import { repackageProduct } from '@/lib/product-packager';
+import { isBlobConfigured } from '@/lib/blob';
+
+export const maxDuration = 60;
 
 const VALID_STATUSES = ['draft', 'active', 'archived'] as const;
 type ProductStatus = (typeof VALID_STATUSES)[number];
@@ -14,6 +18,7 @@ interface ProductRecord {
   status: string;
   stripe_product_id: string | null;
   stripe_price_id: string | null;
+  file_url: string | null;
   [key: string]: unknown;
 }
 
@@ -74,8 +79,20 @@ export async function PATCH(
       await archiveStripeProduct(existing.stripe_product_id);
     }
 
+    // Auto-generate branded PDFs when transitioning to active
+    let repackageResult = null;
+    if (newStatus === 'active' && oldStatus !== 'active' && existing.file_url && isBlobConfigured()) {
+      try {
+        repackageResult = await repackageProduct(id, existing.name);
+        console.log(`[TASK-300] Repackaged product ${id}: ${repackageResult.pdfCount} PDFs generated`);
+      } catch (err) {
+        // Log but don't fail the status transition — PDFs are best-effort
+        console.error(`[TASK-300] PDF repackaging failed for product ${id}:`, err);
+      }
+    }
+
     const updated = await queryOne('SELECT * FROM products WHERE id = ?', [id]);
-    return NextResponse.json({ product: updated });
+    return NextResponse.json({ product: updated, repackageResult });
   } catch (error) {
     console.error('Update product status error:', error);
     return NextResponse.json({ error: 'Failed to update product status' }, { status: 500 });
