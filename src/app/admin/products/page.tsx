@@ -135,6 +135,7 @@ export default function AdminProductsPage() {
     { id: string; name: string }[] | null
   >(null);
   const [syncing, setSyncing] = useState(false);
+  const [regeneratingAll, setRegeneratingAll] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
@@ -289,6 +290,23 @@ export default function AdminProductsPage() {
     }
   }
 
+  async function handleRegenerateAll() {
+    setRegeneratingAll(true);
+    try {
+      const res = await fetch("/api/admin/products/regenerate-all", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Regeneration failed");
+      const count = data.regenerated ?? data.count ?? 0;
+      alert(`Regenerated PDFs for ${count} product${count !== 1 ? "s" : ""} successfully`);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to regenerate PDFs");
+    } finally {
+      setRegeneratingAll(false);
+    }
+  }
+
   // Clear selection when switching tabs
   useEffect(() => {
     setSelectedIds(new Set());
@@ -320,6 +338,17 @@ export default function AdminProductsPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <h1 className="text-2xl font-bold text-text-primary">Products</h1>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleRegenerateAll}
+              disabled={regeneratingAll}
+              className="px-4 py-2.5 rounded-xl font-medium text-sm inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${regeneratingAll ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              {regeneratingAll ? "Regenerating..." : "Regenerate All PDFs"}
+            </button>
             <button
               onClick={handleSyncStripe}
               disabled={syncing}

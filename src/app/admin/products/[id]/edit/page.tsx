@@ -7,7 +7,7 @@ import ProductForm from '@/components/ProductForm';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import type { Product } from '@/lib/types';
 import Link from 'next/link';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ArrowLeft, FileText, RefreshCw } from 'lucide-react';
 import ProductFilePanel from '@/components/admin/ProductFilePanel';
 
 export default function EditProductPage() {
@@ -22,6 +22,7 @@ export default function EditProductPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [regenerating, setRegenerating] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -40,6 +41,23 @@ export default function EditProductPage() {
         setLoading(false);
       });
   }, [id]);
+
+  async function handleRegeneratePdfs() {
+    setRegenerating(true);
+    try {
+      const res = await fetch(`/api/admin/products/${id}/regenerate-pdfs`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Regeneration failed');
+      const count = data.regenerated ?? data.count ?? 0;
+      alert(`Regenerated ${count} PDF${count !== 1 ? 's' : ''} successfully`);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to regenerate PDFs');
+    } finally {
+      setRegenerating(false);
+    }
+  }
 
   if (checking || !authenticated) {
     return (
@@ -87,15 +105,28 @@ export default function EditProductPage() {
               <h1 className="text-2xl font-bold text-text-primary">
                 Edit: {product.name}
               </h1>
-              <a
-                href={`/api/admin/products/${id}/pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 transition-colors text-sm"
-              >
-                <FileText className="w-4 h-4" />
-                Preview PDF
-              </a>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleRegeneratePdfs}
+                  disabled={regenerating}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-text-secondary hover:text-text-primary transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${regenerating ? 'animate-spin' : ''}`}
+                    aria-hidden="true"
+                  />
+                  {regenerating ? 'Regenerating...' : 'Regenerate PDFs'}
+                </button>
+                <a
+                  href={`/api/admin/products/${id}/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 transition-colors text-sm"
+                >
+                  <FileText className="w-4 h-4" />
+                  Preview PDF
+                </a>
+              </div>
             </div>
             <ProductForm product={product} stats={stats} />
             <div className="mt-8">
