@@ -14,6 +14,7 @@ import {
   RotateCcw,
   AlertTriangle,
   X,
+  RefreshCw,
 } from "lucide-react";
 
 type FilterTab = "default" | "active" | "draft" | "archived" | "all";
@@ -133,6 +134,7 @@ export default function AdminProductsPage() {
   const [deleteModalProducts, setDeleteModalProducts] = useState<
     { id: string; name: string }[] | null
   >(null);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
@@ -270,6 +272,23 @@ export default function AdminProductsPage() {
     }
   }
 
+  async function handleSyncStripe() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/admin/products/sync-stripe", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Sync failed");
+      alert(data.message || "Synced products to Stripe");
+      loadProducts();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   // Clear selection when switching tabs
   useEffect(() => {
     setSelectedIds(new Set());
@@ -300,13 +319,26 @@ export default function AdminProductsPage() {
       <main className="flex-1 p-4 sm:p-8 overflow-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <h1 className="text-2xl font-bold text-text-primary">Products</h1>
-          <Link
-            href="/admin/products/new"
-            className="btn-gradient px-5 py-2.5 rounded-xl font-medium text-sm inline-flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" aria-hidden="true" />
-            Create Product
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSyncStripe}
+              disabled={syncing}
+              className="px-4 py-2.5 rounded-xl font-medium text-sm inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              {syncing ? "Syncing..." : "Sync to Stripe"}
+            </button>
+            <Link
+              href="/admin/products/new"
+              className="btn-gradient px-5 py-2.5 rounded-xl font-medium text-sm inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              Create Product
+            </Link>
+          </div>
         </div>
 
         {/* Filter Tabs */}
