@@ -45,17 +45,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
-          <Script
-            defer
-            src={`${process.env.NEXT_PUBLIC_UMAMI_URL || "https://cloud.umami.is"}/script.js`}
-            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-            strategy="afterInteractive"
-          />
-        )}
-      </head>
-      <body className={`${inter.className} antialiased`}>{children}</body>
+      <head />
+      <body className={`${inter.className} antialiased`}>
+        {children}
+        <Script
+          defer
+          src="https://umami-seven-tau.vercel.app/script.js"
+          data-website-id="a4fedac4-73eb-4f8a-bdb9-1e7b2bcb92bb"
+          strategy="afterInteractive"
+        />
+      </body>
     </html>
   );
 }
