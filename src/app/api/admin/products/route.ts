@@ -63,6 +63,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product name is required' }, { status: 400 });
     }
 
+    // Validate description length (reject over 50,000 chars to prevent abuse, never silently truncate)
+    if (body.description !== undefined && body.description !== null) {
+      if (typeof body.description !== 'string') {
+        return NextResponse.json({ error: 'Description must be a string' }, { status: 400 });
+      }
+      if (body.description.length > 50000) {
+        return NextResponse.json(
+          { error: `Description too long (${body.description.length} chars). Maximum is 50,000 characters.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate short_description length
+    if (body.short_description !== undefined && body.short_description !== null) {
+      if (typeof body.short_description !== 'string') {
+        return NextResponse.json({ error: 'Short description must be a string' }, { status: 400 });
+      }
+      if (body.short_description.length > 500) {
+        return NextResponse.json(
+          { error: `Short description too long (${body.short_description.length} chars). Maximum is 500 characters.` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Validate price_cents (non-negative integer, if provided)
     if (body.price_cents !== undefined) {
       if (typeof body.price_cents !== 'number' || body.price_cents < 0 || !Number.isInteger(body.price_cents)) {

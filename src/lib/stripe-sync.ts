@@ -1,5 +1,15 @@
 import Stripe from 'stripe';
 
+// Stripe limits product descriptions to 500 characters.
+// Truncate gracefully at a word boundary to avoid silent API errors.
+const STRIPE_DESCRIPTION_MAX = 500;
+function truncateForStripe(text: string): string {
+  if (text.length <= STRIPE_DESCRIPTION_MAX) return text;
+  const truncated = text.slice(0, STRIPE_DESCRIPTION_MAX - 3);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return (lastSpace > STRIPE_DESCRIPTION_MAX * 0.6 ? truncated.slice(0, lastSpace) : truncated) + '...';
+}
+
 let _stripe: Stripe | null | undefined;
 
 function getStripe(): Stripe | null {
@@ -29,7 +39,7 @@ export async function createStripeProduct(product: {
   try {
     const stripeProduct = await stripe.products.create({
       name: product.name,
-      description: product.description || undefined,
+      description: product.description ? truncateForStripe(product.description) : undefined,
     });
 
     const stripePrice = await stripe.prices.create({
@@ -62,7 +72,7 @@ export async function updateStripeProduct(
   try {
     const payload: Stripe.ProductUpdateParams = {};
     if (updates.name !== undefined) payload.name = updates.name;
-    if (updates.description !== undefined) payload.description = updates.description;
+    if (updates.description !== undefined) payload.description = truncateForStripe(updates.description);
 
     if (Object.keys(payload).length > 0) {
       await stripe.products.update(stripe_product_id, payload);

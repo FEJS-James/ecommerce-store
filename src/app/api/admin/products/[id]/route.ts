@@ -84,6 +84,32 @@ interface ProductRecord {
 }
 
 async function updateProductHandler(id: string, body: Record<string, unknown>) {
+  // Validate description length — never silently truncate
+  if ("description" in body && body.description !== null && body.description !== undefined) {
+    if (typeof body.description !== "string") {
+      return NextResponse.json({ error: "Description must be a string" }, { status: 400 });
+    }
+    if (body.description.length > 50000) {
+      return NextResponse.json(
+        { error: `Description too long (${body.description.length} chars). Maximum is 50,000 characters.` },
+        { status: 400 },
+      );
+    }
+  }
+
+  // Validate short_description length
+  if ("short_description" in body && body.short_description !== null && body.short_description !== undefined) {
+    if (typeof body.short_description !== "string") {
+      return NextResponse.json({ error: "Short description must be a string" }, { status: 400 });
+    }
+    if (body.short_description.length > 500) {
+      return NextResponse.json(
+        { error: `Short description too long (${body.short_description.length} chars). Maximum is 500 characters.` },
+        { status: 400 },
+      );
+    }
+  }
+
   const existing = await queryOne<ProductRecord>(
     "SELECT * FROM products WHERE id = ?",
     [id],
