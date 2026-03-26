@@ -1,15 +1,20 @@
 /**
- * HTML → PDF conversion using Puppeteer + @sparticuz/chromium.
+ * HTML → PDF conversion using Puppeteer + @sparticuz/chromium-min.
  *
- * Works both locally (if Chrome/Chromium is installed) and on Vercel serverless
- * via the @sparticuz/chromium package which bundles a compatible Chromium binary.
+ * Works both locally (if Chrome/Chromium is installed) and on Vercel serverless.
+ * Uses @sparticuz/chromium-min which downloads the Chromium binary at runtime
+ * from a remote URL, avoiding Vercel's file-size limits on serverless packages.
  */
 
 import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
+import chromium from '@sparticuz/chromium-min';
 
 // Vercel serverless: disable GPU/graphics stack (not available in Lambda)
 chromium.setGraphicsMode = false;
+
+// Remote URL for the Chromium binary pack (must match installed @sparticuz/chromium-min version)
+const CHROMIUM_PACK_URL =
+  'https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.x64.tar';
 
 const DEFAULT_VIEWPORT = { width: 1280, height: 720 };
 
@@ -27,7 +32,7 @@ const PDF_OPTIONS = {
 /** Resolve the Chromium executable path for the current environment. */
 async function getExecutablePath(): Promise<string> {
   if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    return await chromium.executablePath();
+    return await chromium.executablePath(CHROMIUM_PACK_URL);
   }
   return (
     process.env.CHROME_EXECUTABLE_PATH ||
