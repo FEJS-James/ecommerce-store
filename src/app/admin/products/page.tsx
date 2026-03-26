@@ -298,7 +298,7 @@ export default function AdminProductsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Regeneration failed");
-      const count = data.regenerated ?? data.count ?? 0;
+      const count = data.summary?.succeeded ?? 0;
       alert(`Regenerated PDFs for ${count} product${count !== 1 ? "s" : ""} successfully`);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to regenerate PDFs");
