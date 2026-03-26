@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { usePricing } from "@/hooks/usePricing";
 import { convertCents, formatPriceWithCurrency } from "@/lib/pricing";
-import { parseMarkdownSimple } from "@/lib/utils";
+import MarkdownContent from "./MarkdownContent";
 
 declare global {
   interface Window {
@@ -161,43 +161,17 @@ export default function ServiceEnquiryModal({
             </h2>
             <p className="text-zinc-400 text-sm mb-4">
               {ready
-                ? formatPriceWithCurrency(convertCents(servicePrice, currency), currency)
-                : formatPriceWithCurrency(servicePrice, "usd")} — tell us about
-              your needs and we&apos;ll get back to you.
+                ? formatPriceWithCurrency(
+                    convertCents(servicePrice, currency),
+                    currency,
+                  )
+                : formatPriceWithCurrency(servicePrice, "usd")}{" "}
+              — tell us about your needs and we&apos;ll get back to you.
             </p>
 
             {serviceDescription && (
-              <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 mb-6 max-h-48 overflow-y-auto space-y-2">
-                {parseMarkdownSimple(serviceDescription).map((block, i) => {
-                  if (block.type === "heading") {
-                    return (
-                      <h3
-                        key={i}
-                        className="text-sm font-semibold text-zinc-200"
-                      >
-                        {block.text}
-                      </h3>
-                    );
-                  }
-                  if (block.type === "bullet") {
-                    return (
-                      <p
-                        key={i}
-                        className="text-xs text-zinc-400 pl-3 before:content-['\2022'] before:mr-2 before:text-indigo-400"
-                      >
-                        {block.text}
-                      </p>
-                    );
-                  }
-                  return (
-                    <p
-                      key={i}
-                      className="text-xs text-zinc-400 leading-relaxed"
-                    >
-                      {block.text}
-                    </p>
-                  );
-                })}
+              <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 mb-6 max-h-48 overflow-y-auto">
+                <MarkdownContent content={serviceDescription} compact />
               </div>
             )}
 
