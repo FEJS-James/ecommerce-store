@@ -51,6 +51,13 @@ export default function EditProductPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Regeneration failed');
       const count = data.result?.pdfCount ?? 0;
+      // Re-fetch product data so Download button points to the new file_url
+      const refreshRes = await fetch(`/api/admin/products/${id}`);
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        setProduct(refreshData.product || null);
+        setStats(refreshData.stats || null);
+      }
       alert(`Regenerated ${count} PDF${count !== 1 ? 's' : ''} successfully`);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to regenerate PDFs');
