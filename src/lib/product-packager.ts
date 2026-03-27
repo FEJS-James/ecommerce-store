@@ -92,10 +92,15 @@ export async function repackageProduct(
     throw new Error(`Failed to download product file: ${response.status} ${response.statusText}`);
   }
   const zipBuffer = Buffer.from(await response.arrayBuffer());
+  console.log(`[PDF-REGEN] Downloaded ZIP: ${zipBuffer.length} bytes`);
 
   // 3. Read the ZIP
   const sourceZip = new AdmZip(zipBuffer);
   const entries = sourceZip.getEntries();
+  console.log(`[PDF-REGEN] ZIP entries: ${entries.length}`);
+  for (const entry of entries) {
+    console.log(`[PDF-REGEN]   entry: ${entry.entryName} (dir=${entry.isDirectory}, size=${entry.header.size})`);
+  }
 
   // 4. Categorize entries
   const convertibleEntries: { entry: AdmZip.IZipEntry; relativePath: string }[] = [];
@@ -120,6 +125,9 @@ export async function repackageProduct(
     }
   }
 
+  console.log(`[PDF-REGEN] Convertible: ${convertibleEntries.length}, Other: ${otherEntries.length}`);
+  convertibleEntries.forEach(e => console.log(`[PDF-REGEN]   convertible: ${e.relativePath}`));
+
   // 5. Convert each .md/.txt to PDF (batch: single Chromium instance)
   const pdfMeta: { name: string }[] = [];
   const htmlDocs: string[] = [];
@@ -141,6 +149,7 @@ export async function repackageProduct(
   }
 
   const pdfBuffers = await htmlToPdfBatch(htmlDocs);
+  console.log(`[PDF-REGEN] Generated ${pdfBuffers.length} PDFs`);
   const pdfResults = pdfMeta.map((meta, i) => ({
     name: meta.name,
     buffer: pdfBuffers[i],
@@ -176,6 +185,7 @@ export async function repackageProduct(
     contentType: 'application/zip',
     folder: `products/${productId}`,
   });
+  console.log(`[PDF-REGEN] Uploaded new ZIP: ${blob.url} (${newZipBuffer.length} bytes)`);
 
   // 8. Delete old ZIP from blob
   try {

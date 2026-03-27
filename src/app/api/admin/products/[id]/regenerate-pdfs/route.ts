@@ -40,7 +40,10 @@ export async function POST(
       );
     }
 
+    console.log(`[PDF-REGEN] Regenerating product: ${id} (${product.name}), file_url: ${product.file_url}`);
+
     const result = await repackageProduct(id, product.name);
+    console.log(`[PDF-REGEN] Result:`, JSON.stringify(result));
 
     return NextResponse.json({
       success: true,
