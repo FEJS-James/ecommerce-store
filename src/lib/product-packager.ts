@@ -118,6 +118,18 @@ export async function repackageProduct(
       continue;
     }
 
+    // Skip files already in PDFs/ or Raw-Files/ directories from previous runs
+    // (they'll be regenerated/re-added by the repackaging process)
+    const topDir = safePath.split('/')[0];
+    if (topDir === 'PDFs' || topDir === 'Raw-Files') {
+      // Only treat raw convertible files as convertible (they're in Raw-Files/)
+      if (isConvertible(safePath)) {
+        convertibleEntries.push({ entry, relativePath: safePath });
+      }
+      // Skip everything else in PDFs/ and Raw-Files/ — they'll be regenerated
+      continue;
+    }
+
     if (isConvertible(safePath)) {
       convertibleEntries.push({ entry, relativePath: safePath });
     } else {
@@ -178,7 +190,7 @@ export async function repackageProduct(
 
   // 7. Upload new ZIP to blob
   const newFileName = product.file_name
-    ? product.file_name.replace(/\.zip$/i, '-with-pdfs.zip')
+    ? product.file_name.replace(/-with-pdfs\.zip$/i, '.zip').replace(/\.zip$/i, '-with-pdfs.zip')
     : `${productName.replace(/[^a-zA-Z0-9-_ ]/g, '').trim()}-with-pdfs.zip`;
 
   const blob = await uploadToBlob(newFileName, newZipBuffer, {
