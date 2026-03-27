@@ -190,7 +190,7 @@ export async function repackageProduct(
 
   // 7. Upload new ZIP to blob
   const newFileName = product.file_name
-    ? product.file_name.replace(/-with-pdfs\.zip$/i, '.zip').replace(/\.zip$/i, '-with-pdfs.zip')
+    ? product.file_name.replace(/(-with-pdfs)+\.zip$/i, '.zip').replace(/\.zip$/i, '-with-pdfs.zip')
     : `${productName.replace(/[^a-zA-Z0-9-_ ]/g, '').trim()}-with-pdfs.zip`;
 
   const blob = await uploadToBlob(newFileName, newZipBuffer, {

@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryOne } from '@/lib/db';
 import { isAuthenticated } from '@/lib/auth';
 import { markdownToBrandedHTML } from '@/lib/pdf-template';
+import { htmlToPdf } from '@/lib/pdf-generator';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(
   _request: NextRequest,
@@ -33,9 +35,12 @@ export async function GET(
       variant: 'guide',
     });
 
-    return new Response(html, {
+    const pdfBuffer = await htmlToPdf(html);
+
+    return new Response(new Uint8Array(pdfBuffer), {
       headers: {
-        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="${product.name.replace(/[^a-zA-Z0-9-_ .]/g, '')}.pdf"`,
         'Cache-Control': 'no-store',
       },
     });
