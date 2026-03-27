@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { markdownToBrandedHTML } from '@/lib/pdf-template';
 import { htmlToPdf } from '@/lib/pdf-generator';
-import { queryOne } from '@/lib/db';
+import { queryOne, queryAll } from '@/lib/db';
 import AdmZip from 'adm-zip';
 
 export const maxDuration = 60;
@@ -293,6 +293,14 @@ export async function GET(request: NextRequest) {
   const format = request.nextUrl.searchParams.get('format') || 'pdf';
 
   try {
+    // List all products mode
+    if (request.nextUrl.searchParams.get('list') === 'products') {
+      const products = await queryAll<{ id: string; name: string; file_url: string | null; file_name: string | null; status: string }>(
+        'SELECT id, name, file_url, file_name, status FROM products ORDER BY name'
+      );
+      return NextResponse.json({ products });
+    }
+
     // Product diagnostic mode
     if (productId) {
       return await handleProductDiagnostic(productId, download);
