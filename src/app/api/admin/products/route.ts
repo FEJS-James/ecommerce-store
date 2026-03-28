@@ -125,8 +125,8 @@ export async function POST(request: NextRequest) {
     }
 
     await execute(
-      `INSERT INTO products (id, name, slug, description, short_description, price_cents, compare_price_cents, category, tags, file_url, file_name, file_size_bytes, preview_images, thumbnail_url, stripe_price_id, status, featured)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO products (id, name, slug, description, short_description, price_cents, compare_price_cents, category, tags, file_url, file_name, file_size_bytes, preview_images, thumbnail_url, stripe_price_id, status, featured, product_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         body.name,
@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
         body.stripe_price_id || null,
         body.status || 'active',
         body.featured ? 1 : 0,
+        body.product_type || 'digital',
       ]
     );
 
