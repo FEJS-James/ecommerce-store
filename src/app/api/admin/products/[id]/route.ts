@@ -70,6 +70,7 @@ const ALLOWED_FIELDS = [
   "status",
   "featured",
   "preview_url",
+  "product_type",
 ];
 
 interface ProductRecord {

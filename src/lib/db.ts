@@ -57,6 +57,7 @@ export async function initializeDb(): Promise<void> {
         preview_images TEXT DEFAULT '[]',
         thumbnail_url TEXT,
         stripe_price_id TEXT,
+        product_type TEXT NOT NULL DEFAULT 'digital',
         status TEXT DEFAULT 'active',
         featured INTEGER DEFAULT 0,
         download_count INTEGER DEFAULT 0,

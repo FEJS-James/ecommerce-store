@@ -32,6 +32,7 @@ export default function ProductForm({ product, stats }: ProductFormProps) {
     compare_price_cents: product?.compare_price_cents || 0,
     category: product?.category || "prompt-packs",
     tags: product?.tags || "[]",
+    product_type: product?.product_type || "digital",
     file_url: product?.file_url || "",
     file_name: product?.file_name || "",
     thumbnail_url: product?.thumbnail_url || "",
@@ -407,6 +408,22 @@ export default function ProductForm({ product, stats }: ProductFormProps) {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1.5">
+                Product Type
+              </label>
+              <select
+                value={form.product_type}
+                onChange={(e) => updateField("product_type", e.target.value)}
+                className={inputClasses}
+              >
+                <option value="digital">Digital</option>
+                <option value="service">Service</option>
+                <option value="subscription">Subscription</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">
                 Status
               </label>
               <select
@@ -419,8 +436,6 @@ export default function ProductForm({ product, stats }: ProductFormProps) {
                 <option value="archived">Archived</option>
               </select>
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1.5">
                 Tags (JSON array)
