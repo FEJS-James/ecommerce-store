@@ -57,6 +57,12 @@ export default function Header() {
               Products
             </Link>
             <Link
+              href="/openclaw"
+              className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
+            >
+              OpenClaw
+            </Link>
+            <Link
               href="/services"
               className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
             >
@@ -132,6 +138,13 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Products
+              </Link>
+              <Link
+                href="/openclaw"
+                className="text-zinc-300 hover:text-white px-4 py-3 rounded-lg hover:bg-white/[0.05] transition-colors font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                OpenClaw
               </Link>
               <Link
                 href="/services"
