@@ -428,4 +428,7 @@ body {
   [style*="lineDraw"] {
     animation: none !important;
   }
+  .animate-slide-in-left {
+    animation: none;
+  }
 }

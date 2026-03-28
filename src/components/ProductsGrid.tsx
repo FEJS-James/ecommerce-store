@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Download,
@@ -56,6 +56,16 @@ export default function ProductsGrid({ products }: ProductsGridProps) {
   const [selectedPrice, setSelectedPrice] = useState<string>(initialPrice);
   const [sort, setSort] = useState(initialSort);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Close mobile filters on Escape key
+  useEffect(() => {
+    if (!mobileFiltersOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileFiltersOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileFiltersOpen]);
 
   // Update URL params
   const updateURL = useCallback(
@@ -253,9 +263,10 @@ export default function ProductsGrid({ products }: ProductsGridProps) {
 
       {/* Mobile Filter Overlay */}
       {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
           {/* Backdrop */}
           <div
+            role="presentation"
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setMobileFiltersOpen(false)}
           />
