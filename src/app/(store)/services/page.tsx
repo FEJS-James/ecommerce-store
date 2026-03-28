@@ -2,6 +2,7 @@ import { queryAll } from "@/lib/db";
 import type { Product } from "@/lib/types";
 import { Shield, Globe, Lock } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
+import CloudHostingPricing from "@/components/CloudHostingPricing";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,20 @@ export default async function ServicesPage() {
           </div>
         </div>
       )}
+
+      {/* Cloud Hosting */}
+      <div className="mb-16">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Cloud Hosting
+          </h2>
+          <p className="text-zinc-400 max-w-xl mx-auto">
+            Managed infrastructure for your AI agents. Pick a plan that fits
+            your scale — upgrade any time.
+          </p>
+        </div>
+        <CloudHostingPricing />
+      </div>
 
       {/* Not sure section */}
       <div className="glass rounded-2xl p-8 text-center mb-16">
