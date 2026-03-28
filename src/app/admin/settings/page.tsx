@@ -12,6 +12,10 @@ import {
   Lock,
   Wallet,
   Smartphone,
+  Wrench,
+  Loader2,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 
 function ConnectionDot({ connected }: { connected: boolean }) {
@@ -45,6 +49,11 @@ export default function AdminSettingsPage() {
     stripeConfigured: boolean;
     blobConfigured: boolean;
     databaseUrl: string;
+  } | null>(null);
+  const [migrationLoading, setMigrationLoading] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<{
+    type: 'success' | 'error';
+    message: string;
   } | null>(null);
 
   useEffect(() => {
@@ -92,6 +101,35 @@ export default function AdminSettingsPage() {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleRunMigration() {
+    setMigrationLoading(true);
+    setMigrationResult(null);
+    try {
+      const res = await fetch('/api/admin/migrate/product-type', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMigrationResult({
+          type: 'success',
+          message: data.message || 'Migration completed successfully.',
+        });
+      } else {
+        setMigrationResult({
+          type: 'error',
+          message: data.error || 'Migration failed.',
+        });
+      }
+    } catch {
+      setMigrationResult({
+        type: 'error',
+        message: 'Network error. Please try again.',
+      });
+    } finally {
+      setMigrationLoading(false);
     }
   }
 
@@ -256,6 +294,73 @@ export default function AdminSettingsPage() {
                       : 'Not configured'}
                   </span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Database Migrations */}
+          <div className="glass p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Wrench
+                className="w-5 h-5 text-indigo-400"
+                aria-hidden="true"
+              />
+              <h2 className="font-semibold text-text-primary">
+                Database Migrations
+              </h2>
+            </div>
+            <div className="space-y-4">
+              <div className="p-3 rounded-xl bg-white/[0.02]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-text-primary text-sm">
+                      Product Type Migration
+                    </p>
+                    <p className="text-xs text-text-secondary mt-0.5">
+                      Adds product_type column and populates it based on
+                      category
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleRunMigration}
+                    disabled={migrationLoading}
+                    className="btn-gradient px-4 py-2 rounded-xl font-medium text-sm disabled:opacity-50 flex items-center gap-2 flex-shrink-0"
+                  >
+                    {migrationLoading ? (
+                      <>
+                        <Loader2
+                          className="w-4 h-4 animate-spin"
+                          aria-hidden="true"
+                        />
+                        Running…
+                      </>
+                    ) : (
+                      'Run Migration'
+                    )}
+                  </button>
+                </div>
+                {migrationResult && (
+                  <div
+                    className={`mt-3 flex items-start gap-2 text-sm p-3 rounded-lg ${
+                      migrationResult.type === 'success'
+                        ? 'bg-emerald-500/10 text-emerald-400'
+                        : 'bg-red-500/10 text-red-400'
+                    }`}
+                  >
+                    {migrationResult.type === 'success' ? (
+                      <CheckCircle2
+                        className="w-4 h-4 mt-0.5 flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <XCircle
+                        className="w-4 h-4 mt-0.5 flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span>{migrationResult.message}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
