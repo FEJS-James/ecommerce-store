@@ -1,9 +1,28 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Download, Headphones, Cloud } from "lucide-react";
 import { CATEGORIES } from "@/lib/utils";
 import CategoryIcon from "@/components/CategoryIcon";
 import GeoPrice from "@/components/GeoPrice";
-import type { Product } from "@/lib/types";
+import type { Product, ProductType } from "@/lib/types";
+
+const PRODUCT_TYPE_CONFIG: Record<
+  ProductType,
+  { icon: React.ReactNode; cta: string }
+> = {
+  digital: {
+    icon: <Download className="w-3.5 h-3.5" aria-hidden="true" />,
+    cta: "View Product",
+  },
+  service: {
+    icon: <Headphones className="w-3.5 h-3.5" aria-hidden="true" />,
+    cta: "Learn More",
+  },
+  subscription: {
+    icon: <Cloud className="w-3.5 h-3.5" aria-hidden="true" />,
+    cta: "View Product",
+  },
+};
 
 interface ProductCardProps {
   product: Product;
@@ -11,11 +30,13 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const category = CATEGORIES[product.category];
+  const productType = product.product_type || "digital";
+  const typeConfig = PRODUCT_TYPE_CONFIG[productType] || PRODUCT_TYPE_CONFIG.digital;
 
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group glass card-glow block overflow-hidden focus-glow rounded-2xl"
+      className="group glass block overflow-hidden focus-glow rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] hover:border-indigo-500/20"
     >
       {/* Thumbnail */}
       <div className="relative aspect-[3/2] overflow-hidden bg-white/[0.02]">
@@ -45,6 +66,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </svg>
           </div>
         )}
+
         {/* Category badge */}
         {category && (
           <span className="absolute top-3 left-3 glass flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full text-zinc-200">
@@ -56,11 +78,16 @@ export default function ProductCard({ product }: ProductCardProps) {
             {category.label}
           </span>
         )}
+
+        {/* Product type icon */}
+        <span className="absolute top-3 right-3 glass flex items-center justify-center w-7 h-7 rounded-full text-zinc-300">
+          {typeConfig.icon}
+        </span>
       </div>
 
       {/* Content */}
       <div className="p-5">
-        <h3 className="font-semibold text-white text-lg mb-2 group-hover:text-indigo-300 transition-colors line-clamp-2">
+        <h3 className="font-semibold text-white text-lg mb-1.5 group-hover:text-indigo-300 transition-colors line-clamp-2">
           {product.name}
         </h3>
         {product.short_description && (
@@ -68,13 +95,16 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.short_description}
           </p>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
           <GeoPrice
             priceCents={product.price_cents}
             comparePriceCents={product.compare_price_cents}
             className="text-lg font-bold text-white"
             strikethroughClassName="text-sm text-zinc-600 line-through"
           />
+          <span className="text-xs font-medium text-indigo-400 group-hover:text-indigo-300 transition-colors">
+            {typeConfig.cta}
+          </span>
         </div>
       </div>
     </Link>
