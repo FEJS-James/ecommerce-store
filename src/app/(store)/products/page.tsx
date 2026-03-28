@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { queryAll } from '@/lib/db';
 import ProductsGrid from '@/components/ProductsGrid';
 import type { Product } from '@/lib/types';
@@ -9,14 +10,7 @@ export const metadata = {
   description: 'Browse our collection of premium AI-powered digital products for creators and professionals.',
 };
 
-interface ProductsPageProps {
-  searchParams: Promise<{ category?: string }>;
-}
-
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const params = await searchParams;
-  const initialCategory = params.category || 'all';
-
+export default async function ProductsPage() {
   const products = await queryAll<Product>(
     "SELECT * FROM products WHERE status = 'active' ORDER BY created_at DESC"
   );
@@ -28,7 +22,20 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <p className="text-lg text-zinc-500">Premium digital products for creators and professionals</p>
       </div>
 
-      <ProductsGrid products={products} initialCategory={initialCategory} />
+      <Suspense fallback={
+        <div className="flex gap-8">
+          <div className="hidden lg:block w-[250px] flex-shrink-0">
+            <div className="glass rounded-2xl p-5 h-96 animate-pulse" />
+          </div>
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="glass rounded-2xl h-80 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      }>
+        <ProductsGrid products={products} />
+      </Suspense>
     </div>
   );
 }

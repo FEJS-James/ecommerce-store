@@ -395,6 +395,20 @@ body {
   to { stroke-dashoffset: 0; }
 }
 
+/* Slide-in animation for mobile filter panel */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.25s ease-out;
+}
+
 /* Reduced motion: disable all hero animations */
 @media (prefers-reduced-motion: reduce) {
   .hero-entrance {
@@ -413,5 +427,8 @@ body {
   }
   [style*="lineDraw"] {
     animation: none !important;
+  }
+  .animate-slide-in-left {
+    animation: none;
   }
 }

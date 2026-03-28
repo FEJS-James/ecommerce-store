@@ -1,3 +1,5 @@
+export type ProductType = 'digital' | 'service' | 'subscription';
+
 export interface Product {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export interface Product {
   price_cents: number;
   compare_price_cents: number | null;
   category: string;
+  product_type: ProductType;
   tags: string;
   file_url: string | null;
   file_name: string | null;
