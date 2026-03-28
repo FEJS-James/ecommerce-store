@@ -1,37 +1,18 @@
-import { queryAll } from "@/lib/db";
-import type { Product } from "@/lib/types";
 import {
   Server,
   Cpu,
   Moon,
-  ArrowDown,
   Cloud,
-  Wrench,
 } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
-import ServiceCard from "@/components/ServiceCard";
 import CloudHostingPricing from "@/components/CloudHostingPricing";
-
-export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "OpenClaw — AI Agent Platform | AI Armory",
   description:
-    "Deploy autonomous AI agents that work for you 24/7. Browse OpenClaw products, cloud hosting plans, and professional setup services.",
+    "Deploy autonomous AI agents that work for you 24/7. Browse OpenClaw cloud hosting plans and learn how to get started.",
 };
 
-export default async function OpenClawPage() {
-  const openclawProducts = await queryAll<Product>(
-    "SELECT * FROM products WHERE (tags LIKE '%openclaw%' OR tags LIKE '%agent%') AND status = 'active' ORDER BY price_cents ASC"
-  );
-
-  const setupServices = await queryAll<Product>(
-    "SELECT * FROM products WHERE category = 'services' AND status = 'active' ORDER BY price_cents ASC"
-  );
-
-  const products = Array.isArray(openclawProducts) ? openclawProducts : [];
-  const services = Array.isArray(setupServices) ? setupServices : [];
-
+export default function OpenClawPage() {
   return (
     <div className="scroll-smooth">
       {/* Hero Section */}
@@ -53,61 +34,21 @@ export default async function OpenClawPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="#products"
-              className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-center flex items-center gap-2 focus-glow"
-            >
-              Browse Products
-              <ArrowDown className="w-4 h-4" aria-hidden="true" />
-            </a>
-            <a
               href="#hosting"
-              className="border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 px-8 py-3.5 rounded-xl font-semibold text-center flex items-center gap-2 focus-glow transition-colors"
+              className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-center flex items-center gap-2 focus-glow"
             >
               Cloud Hosting
               <Cloud className="w-4 h-4" aria-hidden="true" />
             </a>
+            <a
+              href="#how-it-works"
+              className="border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 px-8 py-3.5 rounded-xl font-semibold text-center flex items-center gap-2 focus-glow transition-colors"
+            >
+              How It Works
+              <Server className="w-4 h-4" aria-hidden="true" />
+            </a>
           </div>
         </div>
-      </section>
-
-      {/* OpenClaw Digital Products */}
-      <section
-        id="products"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20"
-      >
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            OpenClaw Products
-          </h2>
-          <p className="text-zinc-400 max-w-xl mx-auto">
-            Agent packs, integrations, and digital tools to supercharge your
-            autonomous AI setup.
-          </p>
-        </div>
-
-        {products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="glass rounded-2xl p-10 max-w-md mx-auto">
-              <Cpu
-                className="w-10 h-10 text-zinc-600 mx-auto mb-3"
-                aria-hidden="true"
-              />
-              <h3 className="text-xl font-bold text-white mb-2">
-                Products coming soon
-              </h3>
-              <p className="text-zinc-400">
-                OpenClaw agent packs and integrations are being prepared. Check
-                back soon.
-              </p>
-            </div>
-          </div>
-        )}
       </section>
 
       {/* Cloud Hosting Pricing */}
@@ -128,69 +69,11 @@ export default async function OpenClawPage() {
         <CloudHostingPricing />
       </section>
 
-      {/* Setup Services */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-10">
-          <div className="w-12 h-12 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Wrench
-              className="w-6 h-6 text-indigo-400"
-              aria-hidden="true"
-            />
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Setup Services
-          </h2>
-          <p className="text-zinc-400 max-w-xl mx-auto">
-            Need help getting started? Our experts will configure, deploy, and
-            optimise your agent infrastructure.
-          </p>
-        </div>
-
-        {services.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {services.map((service, index) => (
-              <ServiceCard
-                key={service.id}
-                name={service.name}
-                description={service.description}
-                priceCents={service.price_cents}
-                tierIndex={index}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="glass rounded-2xl p-10 max-w-md mx-auto">
-              <Wrench
-                className="w-10 h-10 text-zinc-600 mx-auto mb-3"
-                aria-hidden="true"
-              />
-              <h3 className="text-xl font-bold text-white mb-2">
-                Services coming soon
-              </h3>
-              <p className="text-zinc-400">
-                Professional setup services are being prepared.
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="text-center">
-          <a
-            href="/services"
-            className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-          >
-            View all services
-            <ArrowDown
-              className="w-4 h-4 rotate-[-90deg]"
-              aria-hidden="true"
-            />
-          </a>
-        </div>
-      </section>
-
       {/* How It Works */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+      <section
+        id="how-it-works"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 scroll-mt-20"
+      >
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             How It Works
