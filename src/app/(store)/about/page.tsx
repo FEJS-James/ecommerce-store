@@ -3,7 +3,7 @@ import { Shield, Target, Zap, Users, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About | AI Armory",
+  title: "About",
   description:
     "AI Armory makes AI automation accessible to every business. Built by operators, not theorists.",
 };

@@ -5,6 +5,7 @@ import { queryAll } from "@/lib/db";
 interface ProductRow {
   slug: string;
   updated_at: string | null;
+  thumbnail_url: string | null;
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -62,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Dynamic product pages
   const products = await queryAll<ProductRow>(
-    "SELECT slug, updated_at FROM products WHERE status = 'active'",
+    "SELECT slug, updated_at, thumbnail_url FROM products WHERE status = 'active'",
   );
 
   const productPages: MetadataRoute.Sitemap = products.map((product) => ({
@@ -70,6 +71,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
     changeFrequency: "weekly",
     priority: 0.7,
+    ...(product.thumbnail_url
+      ? {
+          images: [product.thumbnail_url],
+        }
+      : {}),
   }));
 
   return [...staticPages, ...productPages];

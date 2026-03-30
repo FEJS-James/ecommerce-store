@@ -178,12 +178,12 @@ function renderDescription(text: string) {
     if (trimmed.startsWith("# ")) {
       flushList();
       elements.push(
-        <h1
+        <h2
           key={elements.length}
           className="text-3xl font-bold text-white mb-4"
         >
           {trimmed.slice(2)}
-        </h1>,
+        </h2>,
       );
     } else if (trimmed.startsWith("## ")) {
       flushList();
@@ -267,11 +267,39 @@ export default async function ProductPage({ params }: PageProps) {
     },
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Products",
+        item: `${SITE_URL}/products`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.name,
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <TrackPageView event="product_view" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 pb-28 lg:pb-12">
