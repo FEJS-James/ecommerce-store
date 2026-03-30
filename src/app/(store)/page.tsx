@@ -30,8 +30,23 @@ const webSiteJsonLd = {
 
 export default async function HomePage() {
   const featuredProducts = await queryAll<Product>(
-    "SELECT * FROM products WHERE featured = 1 AND status = 'active' LIMIT 4",
+    "SELECT * FROM products WHERE featured = 1 AND status = 'active' LIMIT 8",
   );
+
+  const allActiveProducts = await queryAll<Product>(
+    "SELECT * FROM products WHERE status = 'active' LIMIT 8",
+  );
+
+  // Use featured products if enough exist, otherwise fill with active products
+  const displayProducts =
+    featuredProducts.length >= 6
+      ? featuredProducts
+      : [
+          ...featuredProducts,
+          ...allActiveProducts.filter(
+            (p) => !featuredProducts.some((fp) => fp.id === p.id),
+          ),
+        ].slice(0, 8);
 
   return (
     <>
@@ -47,7 +62,7 @@ export default async function HomePage() {
       <StatsSection />
       <HowItWorksSection />
       <CategoriesSection />
-      <FeaturedProductsSection products={featuredProducts} />
+      <FeaturedProductsSection products={displayProducts} />
       <TrustSection />
       <ServicesSection />
       <SocialProofSection />
