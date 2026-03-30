@@ -1,7 +1,9 @@
 import TrackPageView from "@/components/TrackPageView";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { queryOne, queryAll } from "@/lib/db";
 import { formatPrice, CATEGORIES, CATEGORY_FAQS } from "@/lib/utils";
+import { SITE_URL, SITE_NAME } from "@/lib/site-config";
 import ProductCard from "@/components/ProductCard";
 import GeoPrice from "@/components/GeoPrice";
 import PurchaseActions from "@/components/PurchaseActions";
@@ -22,6 +24,43 @@ import {
 import type { Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await queryOne<Product>(
+    "SELECT * FROM products WHERE slug = ? AND status = 'active'",
+    [slug],
+  );
+
+  if (!product) return {};
+
+  const title = product.name.length > 57
+    ? product.name.slice(0, 57) + "..."
+    : product.name;
+  const description = product.short_description
+    ? product.short_description.slice(0, 155)
+    : `${product.name} — available at ${SITE_NAME}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/products/${product.slug}`,
+    },
+    openGraph: {
+      title: product.name,
+      description,
+      url: `${SITE_URL}/products/${product.slug}`,
+      images: product.thumbnail_url ? [product.thumbnail_url] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: product.thumbnail_url ? [product.thumbnail_url] : undefined,
+    },
+  };
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -213,8 +252,27 @@ export default async function ProductPage({ params }: PageProps) {
     ? `Save ${formatPrice(Number(product.compare_price_cents) - Number(product.price_cents))} (${Math.round((1 - Number(product.price_cents) / Number(product.compare_price_cents)) * 100)}% off)`
     : null;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.short_description || product.name,
+    url: `${SITE_URL}/products/${product.slug}`,
+    image: product.thumbnail_url || undefined,
+    offers: {
+      "@type": "Offer",
+      price: (Number(product.price_cents) / 100).toFixed(2),
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <TrackPageView event="product_view" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 pb-28 lg:pb-12">
         {/* Breadcrumb */}
